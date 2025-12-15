@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 
 export async function POST() {
-  const response = NextResponse.json({ success: true });
+  const response = NextResponse.redirect(new URL("/login", "http://localhost"));
 
-  response.cookies.set("auth", "", {
-    httpOnly: true,
+  response.cookies.set("panorama_session", "", {
+    maxAge: 0,
     path: "/",
-    maxAge: 0, // 🔥 hapus cookie
   });
 
   return response;

@@ -1,16 +1,26 @@
 import { NextResponse } from "next/server";
 
 export function middleware(req) {
+  const { pathname } = req.nextUrl;
   const auth = req.cookies.get("auth")?.value;
-  const path = req.nextUrl.pathname;
 
-  // Proteksi dashboard pasien
-  if (path.startsWith("/dashboard") && !auth) {
-    return NextResponse.redirect(new URL("/login", req.url));
+  // ===== ADMIN =====
+  if (pathname.startsWith("/admin/dashboard")) {
+    if (auth !== "admin") {
+      return NextResponse.redirect(new URL("/admin/login", req.url));
+    }
   }
 
-  // Proteksi admin
-  if (path.startsWith("/admin") && auth !== "admin") {
-    return NextResponse.redirect(new URL("/admin/login", req.url));
+  // ===== PASIEN =====
+  if (pathname.startsWith("/dashboard")) {
+    if (!auth || auth === "admin") {
+      return NextResponse.redirect(new URL("/login", req.url));
+    }
   }
+
+  return NextResponse.next();
 }
+
+export const config = {
+  matcher: ["/dashboard/:path*", "/admin/dashboard/:path*"],
+};

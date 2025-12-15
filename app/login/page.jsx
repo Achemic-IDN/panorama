@@ -5,54 +5,65 @@ import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [queue, setQueue] = useState("");
+  const [antrian, setAntrian] = useState("");
   const [mrn, setMrn] = useState("");
   const [error, setError] = useState("");
 
-  function handleLogin(e) {
-    e.preventDefault();
-
-    // VALIDASI SEDERHANA
-    if (!queue || !mrn) {
+  const handleLogin = () => {
+    if (!antrian || !mrn) {
       setError("Nomor antrean dan MRN wajib diisi");
       return;
     }
 
-    if (mrn.length < 5) {
-      setError("Nomor rekam medis tidak valid");
-      return;
-    }
+    // SIMPAN DATA LOGIN
+    localStorage.setItem(
+      "panorama_login",
+      JSON.stringify({
+        nomorAntrian: antrian,
+        mrn: mrn,
+      })
+    );
 
-    // JIKA VALID → MASUK DASHBOARD
-    router.push(`/dashboard?queue=${queue}`);
-  }
+    router.push("/dashboard");
+  };
 
   return (
     <main style={{ padding: "40px", fontFamily: "Arial", maxWidth: "400px", margin: "auto" }}>
-      <h1>PANORAMA</h1>
-      <p>Login Pasien</p>
+      <h2>Login Pasien</h2>
 
-      <form onSubmit={handleLogin}>
+      <div style={{ marginBottom: "15px" }}>
+        <label>Nomor Antrean</label>
         <input
-          placeholder="Nomor Antrean"
-          value={queue}
-          onChange={(e) => setQueue(e.target.value)}
-          style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
+          value={antrian}
+          onChange={(e) => setAntrian(e.target.value)}
+          style={{ width: "100%", padding: "8px" }}
         />
+      </div>
 
+      <div style={{ marginBottom: "15px" }}>
+        <label>Nomor Rekam Medis (MRN)</label>
         <input
-          placeholder="Nomor Rekam Medis"
           value={mrn}
           onChange={(e) => setMrn(e.target.value)}
-          style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
+          style={{ width: "100%", padding: "8px" }}
         />
+      </div>
 
-        {error && <p style={{ color: "red" }}>{error}</p>}
+      {error && <p style={{ color: "red" }}>{error}</p>}
 
-        <button style={{ padding: "10px", width: "100%" }}>
-          Masuk Dashboard
-        </button>
-      </form>
+      <button
+        onClick={handleLogin}
+        style={{
+          width: "100%",
+          padding: "10px",
+          backgroundColor: "#2563eb",
+          color: "white",
+          border: "none",
+          borderRadius: "6px",
+        }}
+      >
+        Masuk Dashboard
+      </button>
     </main>
   );
 }

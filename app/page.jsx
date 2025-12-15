@@ -1,21 +1,15 @@
-import Link from "next/link";
+"use client";
+
+import { useRouter } from "next/navigation";
 
 export default function Home() {
-  return (
-    <main
-      style={{
-        padding: "40px",
-        fontFamily: "Arial",
-        maxWidth: "600px",
-        margin: "0 auto",
-        textAlign: "center",
-      }}
-    >
-      <h1 style={{ fontSize: "32px", marginBottom: "8px" }}>
-        PANORAMA
-      </h1>
+  const router = useRouter();
 
-      <p style={{ fontWeight: "bold", marginBottom: "8px" }}>
+  return (
+    <main style={{ padding: "40px", fontFamily: "Arial", textAlign: "center" }}>
+      <h1 style={{ fontSize: "32px" }}>PANORAMA</h1>
+
+      <p style={{ fontWeight: "bold", marginBottom: "10px" }}>
         (VERSI TEST ONLINE)
       </p>
 
@@ -23,41 +17,20 @@ export default function Home() {
         Pelacakan Antrian Obat Real-time Mandiri
       </p>
 
-      <div
+      <button
+        onClick={() => router.push("/login")}
         style={{
-          padding: "20px",
-          border: "1px solid #ddd",
+          padding: "12px 24px",
+          fontSize: "16px",
+          backgroundColor: "#2563eb",
+          color: "white",
+          border: "none",
           borderRadius: "8px",
-          marginBottom: "30px",
-          textAlign: "left",
+          cursor: "pointer",
         }}
       >
-        <h2>Prototype Sistem</h2>
-        <ul>
-          <li>✔ Pengambilan nomor antrean</li>
-          <li>✔ Pelacakan status obat</li>
-          <li>✔ Dashboard pasien</li>
-          <li>✔ Dashboard petugas</li>
-          <li>✔ Notifikasi WhatsApp (konseptual)</li>
-        </ul>
-      </div>
-
-      {/* Tombol Login */}
-      <Link href="/login">
-        <button
-          style={{
-            padding: "12px 24px",
-            fontSize: "16px",
-            backgroundColor: "#2563eb",
-            color: "#fff",
-            border: "none",
-            borderRadius: "8px",
-            cursor: "pointer",
-          }}
-        >
-          Masuk Login Pasien
-        </button>
-      </Link>
+        Masuk Login Pasien
+      </button>
     </main>
   );
 }

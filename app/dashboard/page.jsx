@@ -1,129 +1,73 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
-export default function DashboardPasien() {
-  // Simulasi data hasil login
-  const [nomorAntrean] = useState("A-023");
-
-  // Simulasi status resep
-  const [statusResep] = useState([
-    { tahap: "Entry Resep", status: "Selesai" },
-    { tahap: "Transport Obat", status: "Selesai" },
-    { tahap: "Pengemasan", status: "Diproses" },
-    { tahap: "Siap Diambil", status: "Menunggu" },
-  ]);
-
+export default function DashboardPage() {
+  const router = useRouter();
+  const [data, setData] = useState(null);
   const [feedback, setFeedback] = useState("");
 
-  const handleSubmitFeedback = () => {
-    if (!feedback.trim()) {
-      alert("Feedback tidak boleh kosong");
+  useEffect(() => {
+    const loginData = localStorage.getItem("panorama_login");
+
+    if (!loginData) {
+      router.replace("/login");
       return;
     }
 
-    alert("Terima kasih atas feedback Anda 🙏");
-    setFeedback("");
-  };
+    setData(JSON.parse(loginData));
+  }, [router]);
+
+  if (!data) return null;
 
   return (
-    <main style={{ padding: "40px", fontFamily: "Arial", maxWidth: "900px", margin: "0 auto" }}>
-      
-      {/* Header */}
-      <h1 style={{ marginBottom: "5px" }}>Dashboard Pasien</h1>
-      <p style={{ color: "#555", marginBottom: "30px" }}>
-        Selamat datang di sistem PANORAMA
+    <main style={{ padding: "40px", fontFamily: "Arial" }}>
+      <h2>Selamat Datang 👋</h2>
+
+      <p>
+        Nomor Antrean: <strong>{data.nomorAntrian}</strong>
       </p>
 
-      {/* Info Antrean */}
-      <div style={{
-        padding: "20px",
-        border: "1px solid #ddd",
-        borderRadius: "8px",
-        marginBottom: "30px",
-        backgroundColor: "#f9fafb"
-      }}>
-        <h2>Nomor Antrean Anda</h2>
-        <p style={{ fontSize: "24px", fontWeight: "bold", color: "#2563eb" }}>
-          {nomorAntrean}
-        </p>
-      </div>
+      <h3>Perkembangan Resep</h3>
 
-      {/* Tabel Status Resep */}
-      <div style={{
-        padding: "20px",
-        border: "1px solid #ddd",
-        borderRadius: "8px",
-        marginBottom: "30px"
-      }}>
-        <h2>Perkembangan Resep</h2>
+      <table border="1" cellPadding="8">
+        <thead>
+          <tr>
+            <th>Tahap</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Entry</td><td>✔ Selesai</td></tr>
+          <tr><td>Transport</td><td>✔ Selesai</td></tr>
+          <tr><td>Pengemasan</td><td>⏳ Proses</td></tr>
+          <tr><td>Siap Diambil</td><td>⏺ Belum</td></tr>
+        </tbody>
+      </table>
 
-        <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "15px" }}>
-          <thead>
-            <tr style={{ backgroundColor: "#f1f5f9" }}>
-              <th style={thStyle}>Tahap</th>
-              <th style={thStyle}>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {statusResep.map((item, index) => (
-              <tr key={index}>
-                <td style={tdStyle}>{item.tahap}</td>
-                <td style={tdStyle}>{item.status}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <h3 style={{ marginTop: "30px" }}>Kirim Feedback</h3>
 
-      {/* Feedback */}
-      <div style={{
-        padding: "20px",
-        border: "1px solid #ddd",
-        borderRadius: "8px"
-      }}>
-        <h2>Feedback Pelayanan</h2>
+      <textarea
+        value={feedback}
+        onChange={(e) => setFeedback(e.target.value)}
+        rows={4}
+        style={{ width: "100%", padding: "10px" }}
+      />
 
-        <textarea
-          placeholder="Tulis kritik atau saran Anda di sini..."
-          value={feedback}
-          onChange={(e) => setFeedback(e.target.value)}
-          style={{
-            width: "100%",
-            height: "100px",
-            padding: "10px",
-            marginTop: "10px",
-            borderRadius: "6px",
-            border: "1px solid #ccc"
-          }}
-        />
-
-        <button
-          onClick={handleSubmitFeedback}
-          style={{
-            marginTop: "15px",
-            padding: "10px 20px",
-            backgroundColor: "#2563eb",
-            color: "#fff",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer"
-          }}
-        >
-          Kirim Feedback
-        </button>
-      </div>
+      <button
+        onClick={() => alert("Feedback terkirim (simulasi)")}
+        style={{
+          marginTop: "10px",
+          padding: "10px 20px",
+          backgroundColor: "#16a34a",
+          color: "white",
+          border: "none",
+          borderRadius: "6px",
+        }}
+      >
+        Kirim
+      </button>
     </main>
   );
 }
-
-const thStyle = {
-  textAlign: "left",
-  padding: "10px",
-  borderBottom: "1px solid #ddd"
-};
-
-const tdStyle = {
-  padding: "10px",
-  borderBottom: "1px solid #eee"
-};

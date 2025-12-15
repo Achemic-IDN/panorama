@@ -4,38 +4,32 @@ export default function Home() {
       style={{
         padding: "40px",
         fontFamily: "Arial",
-        maxWidth: "800px",
-        margin: "0 auto",
+        textAlign: "center"
       }}
     >
-      {/* Header */}
-      <div style={{ marginBottom: "30px" }}>
-        <h1 style={{ fontSize: "32px", marginBottom: "6px" }}>
-          PANORAMA
-        </h1>
+      <h1 style={{ fontSize: "32px", marginBottom: "8px" }}>
+        PANORAMA
+      </h1>
 
-        <p style={{ fontWeight: "bold", marginBottom: "6px" }}>
-          PANORAMA (VERSI TEST ONLINE)
-        </p>
+      <p style={{ fontWeight: "bold", marginBottom: "8px" }}>
+        (VERSI TEST ONLINE)
+      </p>
 
-        <p style={{ color: "#555" }}>
-          Pelacakan Antrian Obat Real-time Mandiri
-        </p>
-      </div>
+      <p style={{ color: "#555", marginBottom: "30px" }}>
+        Pelacakan Antrian Obat Real-time Mandiri
+      </p>
 
-      {/* Konten utama */}
       <div
         style={{
           padding: "20px",
           border: "1px solid #ddd",
           borderRadius: "8px",
+          display: "inline-block",
+          textAlign: "left"
         }}
       >
-        <h2 style={{ marginBottom: "12px" }}>
-          Prototype Sistem
-        </h2>
-
-        <ul style={{ lineHeight: "1.8" }}>
+        <h2>Prototype Sistem</h2>
+        <ul>
           <li>✔ Pengambilan nomor antrean</li>
           <li>✔ Pelacakan status obat</li>
           <li>✔ Dashboard pasien</li>

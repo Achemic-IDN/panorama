@@ -5,44 +5,111 @@ import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [nomorAntrean, setNomorAntrean] = useState("");
+
+  const [queue, setQueue] = useState("");
   const [mrn, setMrn] = useState("");
+  const [error, setError] = useState("");
 
   async function handleLogin(e) {
     e.preventDefault();
+    setError("");
 
-    const res = await fetch("/api/login", {
+    const res = await fetch("/api/auth/login", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nomorAntrean, mrn }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        role: "patient",
+        queue: queue,
+        mrn: mrn,
+      }),
     });
 
     if (res.ok) {
       router.push("/dashboard");
     } else {
-      alert("Login gagal");
+      setError("Login gagal. Periksa Nomor Antrean dan MRN.");
     }
   }
 
   return (
-    <main style={{ padding: 40 }}>
-      <h1>Login PANORAMA</h1>
+    <main
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        background: "#f1f5f9",
+      }}
+    >
+      <form
+        onSubmit={handleLogin}
+        style={{
+          background: "white",
+          padding: "30px",
+          borderRadius: "12px",
+          width: "320px",
+          boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+        }}
+      >
+        <h1 style={{ textAlign: "center", marginBottom: "5px" }}>
+          PANORAMA
+        </h1>
 
-      <form onSubmit={handleLogin}>
+        <p style={{ textAlign: "center", color: "#555", marginBottom: "20px" }}>
+          Login Pasien
+        </p>
+
+        <label>Nomor Antrean</label>
         <input
-          placeholder="Nomor Antrean"
-          value={nomorAntrean}
-          onChange={(e) => setNomorAntrean(e.target.value)}
+          type="text"
+          value={queue}
+          onChange={(e) => setQueue(e.target.value)}
+          placeholder="Contoh: ABC123"
+          required
+          style={inputStyle}
         />
-        <br /><br />
+
+        <label>Nomor Rekam Medis (MRN)</label>
         <input
-          placeholder="Nomor Rekam Medis"
+          type="text"
           value={mrn}
           onChange={(e) => setMrn(e.target.value)}
+          placeholder="Contoh: 999999"
+          required
+          style={inputStyle}
         />
-        <br /><br />
-        <button type="submit">Masuk</button>
+
+        {error && (
+          <p style={{ color: "red", fontSize: "14px", marginTop: "10px" }}>
+            {error}
+          </p>
+        )}
+
+        <button type="submit" style={buttonStyle}>
+          Masuk Dashboard
+        </button>
       </form>
     </main>
   );
 }
+
+const inputStyle = {
+  width: "100%",
+  padding: "10px",
+  marginTop: "5px",
+  marginBottom: "15px",
+  borderRadius: "6px",
+  border: "1px solid #ccc",
+};
+
+const buttonStyle = {
+  width: "100%",
+  padding: "10px",
+  background: "#2563eb",
+  color: "white",
+  border: "none",
+  borderRadius: "6px",
+  cursor: "pointer",
+};

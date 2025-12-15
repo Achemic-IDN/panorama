@@ -5,28 +5,31 @@ import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [data, setData] = useState(null);
-  const [feedback, setFeedback] = useState("");
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const loginData = localStorage.getItem("panorama_login");
-
-    if (!loginData) {
-      router.replace("/login");
-      return;
+    const data = localStorage.getItem("panoramaUser");
+    if (!data) {
+      router.push("/login");
+    } else {
+      setUser(JSON.parse(data));
     }
-
-    setData(JSON.parse(loginData));
   }, [router]);
 
-  if (!data) return null;
+  function handleLogout() {
+    localStorage.removeItem("panoramaUser");
+    router.push("/login");
+  }
+
+  if (!user) return null;
 
   return (
     <main style={{ padding: "40px", fontFamily: "Arial" }}>
-      <h2>Selamat Datang 👋</h2>
+      <h1>Dashboard Pasien</h1>
+      <p>Selamat datang 👋</p>
 
       <p>
-        Nomor Antrean: <strong>{data.nomorAntrian}</strong>
+        <strong>Nomor Antrean:</strong> {user.nomorAntrian}
       </p>
 
       <h3>Perkembangan Resep</h3>
@@ -46,27 +49,21 @@ export default function DashboardPage() {
         </tbody>
       </table>
 
-      <h3 style={{ marginTop: "30px" }}>Kirim Feedback</h3>
+      <h3 style={{ marginTop: "30px" }}>Umpan Balik Pasien</h3>
 
       <textarea
-        value={feedback}
-        onChange={(e) => setFeedback(e.target.value)}
-        rows={4}
-        style={{ width: "100%", padding: "10px" }}
+        placeholder="Tulis kritik atau saran..."
+        style={{ width: "100%", height: "80px" }}
       />
 
-      <button
-        onClick={() => alert("Feedback terkirim (simulasi)")}
-        style={{
-          marginTop: "10px",
-          padding: "10px 20px",
-          backgroundColor: "#16a34a",
-          color: "white",
-          border: "none",
-          borderRadius: "6px",
-        }}
-      >
-        Kirim
+      <br />
+      <button style={{ marginTop: "10px" }}>
+        Kirim Feedback
+      </button>
+
+      <br /><br />
+      <button onClick={handleLogout} style={{ color: "red" }}>
+        Logout
       </button>
     </main>
   );

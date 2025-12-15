@@ -1,40 +1,26 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 export default function DashboardPage() {
-  const router = useRouter();
-  const [user, setUser] = useState(null);
+  const cookieStore = cookies();
+  const session = cookieStore.get("panorama_session");
 
-  useEffect(() => {
-    const data = localStorage.getItem("panoramaUser");
-    if (!data) {
-      router.push("/login");
-    } else {
-      setUser(JSON.parse(data));
-    }
-  }, [router]);
-
-  function handleLogout() {
-    localStorage.removeItem("panoramaUser");
-    router.push("/login");
+  // ❌ BELUM LOGIN
+  if (!session) {
+    redirect("/login");
   }
 
-  if (!user) return null;
+  // ✅ SUDAH LOGIN
+  const nomorAntrean = session.value;
 
   return (
-    <main style={{ padding: "40px", fontFamily: "Arial" }}>
-      <h1>Dashboard Pasien</h1>
-      <p>Selamat datang 👋</p>
+    <main style={{ padding: 40 }}>
+      <h1>Dashboard PANORAMA</h1>
+      <p>Selamat datang, nomor antrean:</p>
+      <h2>{nomorAntrean}</h2>
 
-      <p>
-        <strong>Nomor Antrean:</strong> {user.nomorAntrian}
-      </p>
-
-      <h3>Perkembangan Resep</h3>
-
-      <table border="1" cellPadding="8">
+      <h3>Status Resep</h3>
+      <table border="1" cellPadding="10">
         <thead>
           <tr>
             <th>Tahap</th>
@@ -42,29 +28,17 @@ export default function DashboardPage() {
           </tr>
         </thead>
         <tbody>
-          <tr><td>Entry</td><td>✔ Selesai</td></tr>
-          <tr><td>Transport</td><td>✔ Selesai</td></tr>
-          <tr><td>Pengemasan</td><td>⏳ Proses</td></tr>
-          <tr><td>Siap Diambil</td><td>⏺ Belum</td></tr>
+          <tr><td>Entry</td><td>Selesai</td></tr>
+          <tr><td>Transport</td><td>Proses</td></tr>
+          <tr><td>Pengemasan</td><td>Menunggu</td></tr>
+          <tr><td>Siap Diambil</td><td>-</td></tr>
         </tbody>
       </table>
 
-      <h3 style={{ marginTop: "30px" }}>Umpan Balik Pasien</h3>
-
-      <textarea
-        placeholder="Tulis kritik atau saran..."
-        style={{ width: "100%", height: "80px" }}
-      />
-
       <br />
-      <button style={{ marginTop: "10px" }}>
-        Kirim Feedback
-      </button>
-
-      <br /><br />
-      <button onClick={handleLogout} style={{ color: "red" }}>
-        Logout
-      </button>
+      <form action="/logout" method="POST">
+        <button>Logout</button>
+      </form>
     </main>
   );
 }

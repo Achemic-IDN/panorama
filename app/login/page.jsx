@@ -5,54 +5,44 @@ import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [nomorAntrian, setNomorAntrian] = useState("");
+  const [nomorAntrean, setNomorAntrean] = useState("");
   const [mrn, setMrn] = useState("");
 
-  function handleLogin() {
-    if (!nomorAntrian || !mrn) {
-      alert("Nomor antrean dan MRN wajib diisi");
-      return;
+  async function handleLogin(e) {
+    e.preventDefault();
+
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nomorAntrean, mrn }),
+    });
+
+    if (res.ok) {
+      router.push("/dashboard");
+    } else {
+      alert("Login gagal");
     }
-
-    // Simpan login
-    localStorage.setItem(
-      "panoramaUser",
-      JSON.stringify({
-        nomorAntrian,
-        mrn,
-      })
-    );
-
-    router.push("/dashboard");
   }
 
   return (
-    <main style={{ padding: "40px", fontFamily: "Arial", textAlign: "center" }}>
-      <h1>PANORAMA</h1>
-      <p>Login Pasien</p>
+    <main style={{ padding: 40 }}>
+      <h1>Login PANORAMA</h1>
 
-      <div style={{ maxWidth: "300px", margin: "0 auto" }}>
+      <form onSubmit={handleLogin}>
         <input
           placeholder="Nomor Antrean"
-          value={nomorAntrian}
-          onChange={(e) => setNomorAntrian(e.target.value)}
-          style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+          value={nomorAntrean}
+          onChange={(e) => setNomorAntrean(e.target.value)}
         />
-
+        <br /><br />
         <input
-          placeholder="Nomor Rekam Medis (MRN)"
+          placeholder="Nomor Rekam Medis"
           value={mrn}
           onChange={(e) => setMrn(e.target.value)}
-          style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
         />
-
-        <button
-          onClick={handleLogin}
-          style={{ padding: "10px", width: "100%" }}
-        >
-          Masuk Dashboard
-        </button>
-      </div>
+        <br /><br />
+        <button type="submit">Masuk</button>
+      </form>
     </main>
   );
 }

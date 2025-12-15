@@ -1,22 +1,18 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
 
-function DashboardContent() {
-  const searchParams = useSearchParams();
-  const queue = searchParams.get("queue");
-  const mrn = searchParams.get("mrn");
+export default function DashboardPage() {
+  const params = useSearchParams();
+  const queue = params.get("queue");
 
   return (
-    <main style={{ padding: "40px" }}>
+    <main style={{ padding: "40px", fontFamily: "Arial" }}>
       <h1>Dashboard Pasien</h1>
 
-      <p><strong>Selamat datang!</strong></p>
-      <p>Nomor Antrean: <b>{queue}</b></p>
-      <p>Nomor Rekam Medis: <b>{mrn}</b></p>
-
-      <hr style={{ margin: "20px 0" }} />
+      <p>
+        Selamat datang, <strong>Nomor Antrean: {queue}</strong>
+      </p>
 
       <h2>Status Resep</h2>
       <table border="1" cellPadding="10">
@@ -27,29 +23,20 @@ function DashboardContent() {
           </tr>
         </thead>
         <tbody>
-          <tr><td>Entry</td><td>✔ Selesai</td></tr>
-          <tr><td>Transport</td><td>✔ Selesai</td></tr>
-          <tr><td>Pengemasan</td><td>⏳ Proses</td></tr>
-          <tr><td>Siap Diambil</td><td>⏺ Menunggu</td></tr>
+          <tr><td>Entry</td><td>✔</td></tr>
+          <tr><td>Transport</td><td>✔</td></tr>
+          <tr><td>Pengemasan</td><td>⏳</td></tr>
+          <tr><td>Siap Diambil</td><td>❌</td></tr>
         </tbody>
       </table>
 
-      <hr style={{ margin: "20px 0" }} />
-
-      <h2>Feedback Pasien</h2>
+      <h2>Feedback</h2>
       <textarea
-        placeholder="Tulis kritik dan saran Anda..."
-        style={{ width: "100%", height: "80px", marginBottom: "10px" }}
+        placeholder="Tulis feedback Anda"
+        style={{ width: "100%", height: "80px" }}
       />
+      <br /><br />
       <button>Kirim Feedback</button>
     </main>
-  );
-}
-
-export default function DashboardPage() {
-  return (
-    <Suspense fallback={<p>Loading dashboard...</p>}>
-      <DashboardContent />
-    </Suspense>
   );
 }

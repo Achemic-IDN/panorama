@@ -9,61 +9,50 @@ export default function LoginPage() {
   const [mrn, setMrn] = useState("");
   const [error, setError] = useState("");
 
-  const handleLogin = () => {
+  function handleLogin(e) {
+    e.preventDefault();
+
+    // VALIDASI SEDERHANA
     if (!queue || !mrn) {
       setError("Nomor antrean dan MRN wajib diisi");
       return;
     }
 
-    // login valid → redirect ke dashboard
-    router.push(`/dashboard?queue=${queue}&mrn=${mrn}`);
-  };
+    if (mrn.length < 5) {
+      setError("Nomor rekam medis tidak valid");
+      return;
+    }
+
+    // JIKA VALID → MASUK DASHBOARD
+    router.push(`/dashboard?queue=${queue}`);
+  }
 
   return (
-    <main style={{ minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center" }}>
-      <div style={{ width: "360px", padding: "24px", border: "1px solid #ddd", borderRadius: "10px" }}>
-        <h1 style={{ textAlign: "center" }}>PANORAMA</h1>
-        <p style={{ textAlign: "center", marginBottom: "20px" }}>
-          Login Dashboard Pasien
-        </p>
+    <main style={{ padding: "40px", fontFamily: "Arial", maxWidth: "400px", margin: "auto" }}>
+      <h1>PANORAMA</h1>
+      <p>Login Pasien</p>
 
-        <label>Nomor Antrean</label>
+      <form onSubmit={handleLogin}>
         <input
+          placeholder="Nomor Antrean"
           value={queue}
           onChange={(e) => setQueue(e.target.value)}
-          placeholder="Contoh: A012"
-          style={{ width: "100%", padding: "8px", marginBottom: "12px" }}
+          style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
         />
 
-        <label>Nomor Rekam Medis</label>
         <input
+          placeholder="Nomor Rekam Medis"
           value={mrn}
           onChange={(e) => setMrn(e.target.value)}
-          placeholder="Contoh: 123456"
-          style={{ width: "100%", padding: "8px", marginBottom: "12px" }}
+          style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
         />
 
-        {error && (
-          <p style={{ color: "red", fontSize: "14px", marginBottom: "10px" }}>
-            {error}
-          </p>
-        )}
+        {error && <p style={{ color: "red" }}>{error}</p>}
 
-        <button
-          onClick={handleLogin}
-          style={{
-            width: "100%",
-            padding: "10px",
-            backgroundColor: "#2563eb",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer"
-          }}
-        >
+        <button style={{ padding: "10px", width: "100%" }}>
           Masuk Dashboard
         </button>
-      </div>
+      </form>
     </main>
   );
 }

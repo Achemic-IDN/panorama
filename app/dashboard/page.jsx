@@ -1,44 +1,36 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+"use client";
+
+import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
-  const cookieStore = cookies();
-  const session = cookieStore.get("panorama_session");
+  const router = useRouter();
 
-  // ❌ BELUM LOGIN
-  if (!session) {
-    redirect("/login");
-  }
+  const handleLogout = async () => {
+    await fetch("/api/logout", {
+      method: "POST",
+    });
 
-  // ✅ SUDAH LOGIN
-  const nomorAntrean = session.value;
+    router.push("/login"); // ✅ BENAR
+  };
 
   return (
-    <main style={{ padding: 40 }}>
-      <h1>Dashboard PANORAMA</h1>
-      <p>Selamat datang, nomor antrean:</p>
-      <h2>{nomorAntrean}</h2>
+    <main style={{ padding: "40px" }}>
+      <h1>Dashboard Pasien</h1>
 
-      <h3>Status Resep</h3>
-      <table border="1" cellPadding="10">
-        <thead>
-          <tr>
-            <th>Tahap</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>Entry</td><td>Selesai</td></tr>
-          <tr><td>Transport</td><td>Proses</td></tr>
-          <tr><td>Pengemasan</td><td>Menunggu</td></tr>
-          <tr><td>Siap Diambil</td><td>-</td></tr>
-        </tbody>
-      </table>
-
-      <br />
-      <form action="/logout" method="POST">
-        <button>Logout</button>
-      </form>
+      <button
+        onClick={handleLogout}
+        style={{
+          marginTop: "20px",
+          padding: "10px 20px",
+          background: "#e11d48",
+          color: "white",
+          border: "none",
+          borderRadius: "6px",
+          cursor: "pointer",
+        }}
+      >
+        Logout
+      </button>
     </main>
   );
 }

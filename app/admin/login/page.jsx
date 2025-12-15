@@ -1,18 +1,16 @@
 "use client";
-import { useRouter } from "next/navigation";
+
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function AdminLogin() {
-  const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const router = useRouter();
 
-  async function handleLogin(e) {
-    e.preventDefault();
-
+  async function handleLogin() {
     const res = await fetch("/api/auth/login", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         role: "admin",
         username,
@@ -28,21 +26,21 @@ export default function AdminLogin() {
   }
 
   return (
-    <main style={{ padding: "40px" }}>
-      <h1>Admin PANORAMA</h1>
+    <main style={{ padding: 40 }}>
+      <h1>Login Admin PANORAMA</h1>
 
-      <form onSubmit={handleLogin}>
-        <input
-          placeholder="Username"
-          onChange={(e) => setUsername(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <button>Login</button>
-      </form>
+      <input
+        placeholder="Username"
+        onChange={(e) => setUsername(e.target.value)}
+      />
+      <br /><br />
+      <input
+        type="password"
+        placeholder="Password"
+        onChange={(e) => setPassword(e.target.value)}
+      />
+      <br /><br />
+      <button onClick={handleLogin}>Masuk Admin</button>
     </main>
   );
 }

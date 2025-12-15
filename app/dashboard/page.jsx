@@ -6,11 +6,11 @@ export default function DashboardPage() {
   const router = useRouter();
 
   const handleLogout = async () => {
-    await fetch("/api/logout", {
+    await fetch("/api/auth/logout", {
       method: "POST",
     });
 
-    router.push("/login"); // ✅ BENAR
+    router.push("/login"); // ke login pasien
   };
 
   return (

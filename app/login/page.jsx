@@ -3,18 +3,18 @@ export default function LoginPage() {
     <main style={{
       minHeight: "100vh",
       display: "flex",
-      alignItems: "center",
       justifyContent: "center",
-      fontFamily: "Arial",
-      backgroundColor: "#f4f6f8"
+      alignItems: "center",
+      background: "linear-gradient(to bottom, #2563eb, #3b82f6)",
+      fontFamily: "Arial"
     }}>
       <div style={{
+        background: "white",
+        padding: "30px",
+        borderRadius: "16px",
         width: "100%",
         maxWidth: "360px",
-        padding: "24px",
-        border: "1px solid #ddd",
-        borderRadius: "8px",
-        backgroundColor: "#fff"
+        boxShadow: "0 10px 25px rgba(0,0,0,0.2)"
       }}>
         <h1 style={{ textAlign: "center", marginBottom: "8px" }}>
           PANORAMA
@@ -22,49 +22,61 @@ export default function LoginPage() {
 
         <p style={{
           textAlign: "center",
+          fontSize: "14px",
           color: "#555",
           marginBottom: "24px"
         }}>
-          Login Pasien
+          Login Dashboard Pasien
         </p>
 
         <div style={{ marginBottom: "16px" }}>
-          <label>Nomor Antrean</label>
+          <label style={{ fontSize: "14px" }}>Nomor Antrean</label>
           <input
-            type="text"
             placeholder="Contoh: A012"
-            style={{ width: "100%", padding: "8px", marginTop: "4px" }}
+            style={{
+              width: "100%",
+              padding: "10px",
+              marginTop: "6px",
+              borderRadius: "8px",
+              border: "1px solid #ccc"
+            }}
           />
         </div>
 
-        <div style={{ marginBottom: "16px" }}>
-          <label>Nomor Rekam Medis</label>
+        <div style={{ marginBottom: "24px" }}>
+          <label style={{ fontSize: "14px" }}>Nomor Rekam Medis</label>
           <input
-            type="text"
             placeholder="Contoh: 12345678"
-            style={{ width: "100%", padding: "8px", marginTop: "4px" }}
+            style={{
+              width: "100%",
+              padding: "10px",
+              marginTop: "6px",
+              borderRadius: "8px",
+              border: "1px solid #ccc"
+            }}
           />
         </div>
 
         <button style={{
           width: "100%",
-          padding: "10px",
-          backgroundColor: "#2563eb",
-          color: "#fff",
+          padding: "12px",
+          borderRadius: "10px",
           border: "none",
-          borderRadius: "6px",
+          background: "#2563eb",
+          color: "white",
+          fontSize: "16px",
           cursor: "pointer"
         }}>
-          Masuk
+          Masuk Dashboard
         </button>
 
         <p style={{
+          marginTop: "16px",
           fontSize: "12px",
           textAlign: "center",
-          marginTop: "16px",
           color: "#777"
         }}>
-          Digunakan hanya untuk melihat status obat pasien
+          Data digunakan hanya untuk verifikasi status obat pasien
         </p>
       </div>
     </main>

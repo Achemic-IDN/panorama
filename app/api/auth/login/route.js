@@ -10,7 +10,7 @@ export async function POST(req) {
     body.password === "panorama"
   ) {
     const res = NextResponse.json({ success: true });
-    res.cookies.set("auth", "admin", { httpOnly: true });
+    res.cookies.set("auth", "admin", { httpOnly: true, path: "/" });
     return res;
   }
 
@@ -20,7 +20,7 @@ export async function POST(req) {
     res.cookies.set(
       "auth",
       JSON.stringify({ role: "patient", queue: body.queue }),
-      { httpOnly: true }
+      { httpOnly: true, path: "/" }
     );
     return res;
   }

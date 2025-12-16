@@ -8,49 +8,32 @@ export default function DashboardPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  async function loadDashboard() {
-    const res = await fetch("/api/dashboard", { cache: "no-store" });
-
-    if (res.status === 401) {
-      router.push("/login");
-      return;
-    }
-
-    const json = await res.json();
-    setData(json);
-    setLoading(false);
-  }
-
   useEffect(() => {
-    loadDashboard();
-  }, []);
+    fetch("/api/dashboard", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((json) => {
+        setData(json);
+        setLoading(false);
+      })
+      .catch(() => {
+        router.push("/login");
+      });
+  }, [router]);
 
   if (loading) {
-    return (
-      <div style={{ padding: 40 }}>
-        Memuat data dashboard...
-      </div>
-    );
+    return <p style={{ padding: 40 }}>Memuat dashboard...</p>;
   }
 
   return (
     <main style={{ padding: 40, fontFamily: "Arial" }}>
-      <h1>Dashboard Pasien</h1>
+      <h1>Selamat Datang</h1>
 
       <p>
-        Selamat datang 👋 <br />
-        <strong>Nomor Antrean:</strong> {data.queueNumber}
+        Nomor Antrean: <strong>{data.queue}</strong>
       </p>
 
-      <hr style={{ margin: "20px 0" }} />
-
       <h3>Status Resep</h3>
-
-      <table
-        border="1"
-        cellPadding="10"
-        style={{ borderCollapse: "collapse", width: "100%" }}
-      >
+      <table border="1" cellPadding="10" style={{ marginBottom: 20 }}>
         <thead>
           <tr>
             <th>Tahap</th>
@@ -58,46 +41,18 @@ export default function DashboardPage() {
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>Entry Resep</td>
-            <td>{data.status === "ENTRY" ? "✅ Selesai" : "⏳ Menunggu"}</td>
-          </tr>
-          <tr>
-            <td>Transport</td>
-            <td>{data.status === "TRANSPORT" ? "🔄 Diproses" : "-"}</td>
-          </tr>
-          <tr>
-            <td>Pengemasan</td>
-            <td>{data.status === "PACKAGING" ? "📦 Diproses" : "-"}</td>
-          </tr>
-          <tr>
-            <td>Siap Diambil</td>
-            <td>{data.status === "READY" ? "✅ Ya" : "❌ Belum"}</td>
-          </tr>
+          <tr><td>Entry</td><td>{data.status === "ENTRY" ? "⏳ Proses" : "✔ Selesai"}</td></tr>
+          <tr><td>Transport</td><td>{data.status === "TRANSPORT" ? "⏳ Proses" : data.status === "ENTRY" ? "-" : "✔ Selesai"}</td></tr>
+          <tr><td>Pengemasan</td><td>{data.status === "PACKAGING" ? "⏳ Proses" : ["READY"].includes(data.status) ? "✔ Selesai" : "-"}</td></tr>
+          <tr><td>Siap Diambil</td><td>{data.status === "READY" ? "✔ Ya" : "Belum"}</td></tr>
         </tbody>
       </table>
 
-      <hr style={{ margin: "20px 0" }} />
-
-      <h3>Feedback Pasien</h3>
+      <h3>Feedback</h3>
       <textarea
-        placeholder="Tulis feedback Anda..."
-        style={{ width: "100%", height: 100 }}
+        placeholder="Tulis penilaian Anda..."
+        style={{ width: "100%", height: 80 }}
       />
-
-      <br /><br />
-
-      <button
-        style={{
-          padding: "10px 20px",
-          background: "#2563eb",
-          color: "white",
-          border: "none",
-          cursor: "pointer",
-        }}
-      >
-        Kirim Feedback
-      </button>
 
       <br /><br />
 
@@ -105,13 +60,6 @@ export default function DashboardPage() {
         onClick={async () => {
           await fetch("/api/auth/logout", { method: "POST" });
           router.push("/login");
-        }}
-        style={{
-          padding: "10px 20px",
-          background: "#dc2626",
-          color: "white",
-          border: "none",
-          cursor: "pointer",
         }}
       >
         Logout

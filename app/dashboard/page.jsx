@@ -11,20 +11,24 @@ export default function DashboardPage() {
   const [history, setHistory] = useState([]);
 
   useEffect(() => {
-    // Load history
-    fetch("/api/queue?mrn=999999")
-      .then(res => {
-        if (!res.ok) throw new Error("Failed to fetch history");
-        return res.json();
-      })
-      .then(data => {
+    async function loadHistory() {
+      try {
+        const res = await fetch("/api/queue?mrn=999999");
+        if (!res.ok) {
+          console.error("Failed to fetch history");
+          return;
+        }
+        const data = await res.json();
         if (Array.isArray(data)) {
           setHistory(data);
         } else {
           console.error("Invalid history data:", data);
         }
-      })
-      .catch(err => console.error("Error loading history:", err));
+      } catch (err) {
+        console.error("Error loading history:", err);
+      }
+    }
+    loadHistory();
   }, []);
 
   async function submitFeedback() {
@@ -184,7 +188,7 @@ export default function DashboardPage() {
                 <tr key={h.id} style={{ background: i % 2 === 0 ? "#fff" : "#f8f9fa" }}>
                   <td style={{ padding: "10px", border: "1px solid #ddd" }}>{h.queue}</td>
                   <td style={{ padding: "10px", border: "1px solid #ddd" }}>{h.status}</td>
-                  <td style={{ padding: "10px", border: "1px solid #ddd" }}>{new Date(h.createdAt).toLocaleString()}</td>
+                  <td style={{ padding: "10px", border: "1px solid #ddd" }}>{new Date(h.createdAt || Date.now()).toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>

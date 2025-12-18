@@ -9,7 +9,7 @@ export async function GET() {
     return NextResponse.json(queues);
   } catch (error) {
     console.error("Error fetching queues:", error);
-    return NextResponse.json({ error: "Failed to fetch queues" }, { status: 500 });
+    return NextResponse.json([], { status: 200 });
   }
 }
 

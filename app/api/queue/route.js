@@ -7,7 +7,7 @@ export async function GET(request) {
     const mrn = searchParams.get('mrn');
 
     if (!mrn) {
-      return NextResponse.json({ error: "MRN required" }, { status: 400 });
+      return NextResponse.json([], { status: 200 });
     }
 
     const queues = await prisma.queue.findMany({
@@ -18,6 +18,6 @@ export async function GET(request) {
     return NextResponse.json(queues);
   } catch (error) {
     console.error("Error fetching patient queues:", error);
-    return NextResponse.json({ error: "Failed to fetch queues" }, { status: 500 });
+    return NextResponse.json([], { status: 200 });
   }
 }

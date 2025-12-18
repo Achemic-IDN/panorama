@@ -43,7 +43,6 @@ export default function AdminDashboard() {
         setFeedbacks(feedbackData);
         setQueues(queueData);
         setLoading(false);
-        setLoading(false);
       } catch (err) {
         setError(err.message);
         setLoading(false);

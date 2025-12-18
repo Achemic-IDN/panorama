@@ -28,16 +28,12 @@ export default function DashboardPage() {
       <section style={{ marginTop: "30px" }}>
         <h3>Feedback Pelayanan</h3>
 
-        {sent && (
-          <p style={{ color: "green" }}>
-            ✅ Feedback terkirim
-          </p>
-        )}
+        {sent && <p style={{ color: "green" }}>✔ Feedback terkirim</p>}
 
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Tulis feedback Anda..."
+          placeholder="Tulis kritik atau saran..."
           style={{ width: "100%", height: "100px" }}
         />
 

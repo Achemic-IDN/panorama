@@ -13,26 +13,28 @@ export default function AdminDashboard() {
 
   return (
     <main style={{ padding: "40px" }}>
-      <h1>Dashboard Admin PANORAMA</h1>
+      <h1>Dashboard Admin Panorama</h1>
 
-      <h3 style={{ marginTop: "30px" }}>Feedback Pasien</h3>
-
-      {feedbacks.length === 0 && <p>Belum ada feedback</p>}
-
-      {feedbacks.map((f, i) => (
-        <div
-          key={i}
-          style={{
-            border: "1px solid #ddd",
-            padding: "10px",
-            marginBottom: "10px",
-          }}
-        >
-          <p><strong>Antrean:</strong> {f.queue}</p>
-          <p><strong>Waktu:</strong> {f.time}</p>
-          <p>{f.message}</p>
-        </div>
-      ))}
+      <table border="1" cellPadding="8" style={{ marginTop: "20px" }}>
+        <thead>
+          <tr>
+            <th>Antrean</th>
+            <th>MRN</th>
+            <th>Pesan</th>
+            <th>Waktu</th>
+          </tr>
+        </thead>
+        <tbody>
+          {feedbacks.map((f, i) => (
+            <tr key={i}>
+              <td>{f.queue}</td>
+              <td>{f.mrn}</td>
+              <td>{f.message}</td>
+              <td>{new Date(f.time).toLocaleString()}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </main>
   );
 }

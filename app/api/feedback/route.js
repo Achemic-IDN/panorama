@@ -1,31 +1,17 @@
 import { NextResponse } from "next/server";
 import { feedbackStore } from "@/app/lib/feedbackStore";
-import { cookies } from "next/headers";
 
 export async function POST(req) {
   const body = await req.json();
-  const cookie = cookies().get("auth");
 
-  if (!cookie) {
-    return new NextResponse("Unauthorized", { status: 401 });
-  }
-
-  let user;
-  try {
-    user = JSON.parse(cookie.value);
-  } catch {
-    return new NextResponse("Invalid auth", { status: 401 });
-  }
-
-  if (user.role !== "patient") {
-    return new NextResponse("Forbidden", { status: 403 });
-  }
-
-  feedbackStore.push({
-    queue: user.queue,
+  const feedback = {
+    queue: body.queue,
+    mrn: body.mrn,
     message: body.message,
-    time: new Date().toLocaleString("id-ID"),
-  });
+    time: new Date().toISOString(),
+  };
+
+  feedbackStore.push(feedback);
 
   return NextResponse.json({ success: true });
 }

@@ -1,4 +1,10 @@
 # PANORAMA
+
+Aplikasi manajemen antrean rumah sakit dengan Next.js, Prisma, dan PostgreSQL.
+
+## Deployment
+
+Project ini siap deploy ke Vercel dengan konfigurasi otomatis.
 Pelacakan Antrian Obat Real-time Mandiri
 
 ## Setup Database

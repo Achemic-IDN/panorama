@@ -136,8 +136,8 @@ export default function DashboardPage() {
                 cursor: loading ? "not-allowed" : "pointer",
                 transition: "transform 0.2s"
               }}
-              onMouseOver={(e) => !loading && e.target.style.transform = "scale(1.05)"}
-              onMouseOut={(e) => !loading && e.target.style.transform = "scale(1)"}
+              onMouseOver={(e) => { if (!loading) e.target.style.transform = "scale(1.05)"; }}
+              onMouseOut={(e) => { if (!loading) e.target.style.transform = "scale(1)"; }}
             >
               {loading ? "Mengirim..." : "Kirim Feedback"}
             </button>

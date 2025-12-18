@@ -156,7 +156,7 @@ export default function AdminDashboard() {
               onClick={createQueue}
               style={{
                 padding: "10px 20px",
-                background: "linear-gradient(135deg, #ff0000 0%, #8b0000 100%)",
+                background: "linear-gradient(135deg, #3685fc 0%, #1e3a8a 100%)",
                 color: "white",
                 border: "none",
                 borderRadius: "4px",

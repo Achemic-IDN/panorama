@@ -29,8 +29,8 @@ export default function AdminDashboard() {
         }
         const feedbackData = await feedbackRes.json();
         const queueData = await queueRes.json();
-        setFeedbacks(feedbackData);
-        setQueues(queueData);
+        setFeedbacks(Array.isArray(feedbackData) ? feedbackData : []);
+        setQueues(Array.isArray(queueData) ? queueData : []);
         setLoading(false);
       } catch (err) {
         setError(err.message);

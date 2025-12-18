@@ -13,8 +13,17 @@ export default function DashboardPage() {
   useEffect(() => {
     // Load history
     fetch("/api/queue?mrn=999999")
-      .then(res => res.json())
-      .then(setHistory)
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to fetch history");
+        return res.json();
+      })
+      .then(data => {
+        if (Array.isArray(data)) {
+          setHistory(data);
+        } else {
+          console.error("Invalid history data:", data);
+        }
+      })
       .catch(err => console.error("Error loading history:", err));
   }, []);
 

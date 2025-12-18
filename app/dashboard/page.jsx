@@ -27,7 +27,7 @@ export default function DashboardPage() {
   return (
     <div style={{
       minHeight: "100vh",
-      background: "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
+      background: "linear-gradient(135deg, #3685fc 0%, #1e3a8a 100%)",
       fontFamily: "Arial, sans-serif",
       padding: "20px"
     }}>
@@ -92,8 +92,8 @@ export default function DashboardPage() {
             onClick={submitFeedback}
             style={{
               padding: "12px 24px",
-              background: "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
-              color: "#333",
+              background: "linear-gradient(135deg, #3685fc 0%, #1e3a8a 100%)",
+              color: "white",
               border: "none",
               borderRadius: "5px",
               fontSize: "16px",

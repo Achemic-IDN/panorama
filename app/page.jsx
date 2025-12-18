@@ -7,7 +7,7 @@ export default function HomePage() {
   return (
     <div style={{
       minHeight: "100vh",
-      background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      background: "linear-gradient(135deg, #3685fc 0%, #1e3a8a 100%)",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
@@ -35,19 +35,19 @@ export default function HomePage() {
               fontSize: "18px",
               borderRadius: "8px",
               border: "none",
-              background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+              background: "linear-gradient(135deg, #3685fc 0%, #1e3a8a 100%)",
               color: "white",
               cursor: "pointer",
               transition: "transform 0.3s, box-shadow 0.3s",
-              boxShadow: "0 4px 15px rgba(0,0,0,0.2)"
+              boxShadow: "0 4px 15px rgba(54, 133, 252, 0.3)"
             }}
             onMouseOver={(e) => {
               e.target.style.transform = "scale(1.05)";
-              e.target.style.boxShadow = "0 6px 20px rgba(0,0,0,0.3)";
+              e.target.style.boxShadow = "0 6px 20px rgba(54, 133, 252, 0.4)";
             }}
             onMouseOut={(e) => {
               e.target.style.transform = "scale(1)";
-              e.target.style.boxShadow = "0 4px 15px rgba(0,0,0,0.2)";
+              e.target.style.boxShadow = "0 4px 15px rgba(54, 133, 252, 0.3)";
             }}
           >
             Login Pasien
@@ -60,19 +60,19 @@ export default function HomePage() {
               fontSize: "18px",
               borderRadius: "8px",
               border: "none",
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              background: "linear-gradient(135deg, #3685fc 0%, #1e3a8a 100%)",
               color: "white",
               cursor: "pointer",
               transition: "transform 0.3s, box-shadow 0.3s",
-              boxShadow: "0 4px 15px rgba(0,0,0,0.2)"
+              boxShadow: "0 4px 15px rgba(54, 133, 252, 0.3)"
             }}
             onMouseOver={(e) => {
               e.target.style.transform = "scale(1.05)";
-              e.target.style.boxShadow = "0 6px 20px rgba(0,0,0,0.3)";
+              e.target.style.boxShadow = "0 6px 20px rgba(54, 133, 252, 0.4)";
             }}
             onMouseOut={(e) => {
               e.target.style.transform = "scale(1)";
-              e.target.style.boxShadow = "0 4px 15px rgba(0,0,0,0.2)";
+              e.target.style.boxShadow = "0 4px 15px rgba(54, 133, 252, 0.3)";
             }}
           >
             Login Admin

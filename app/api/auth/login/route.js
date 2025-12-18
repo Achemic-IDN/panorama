@@ -2,13 +2,13 @@ import { NextResponse } from "next/server";
 
 export async function POST(request) {
   const body = await request.json();
-  const { username, password, role } = body;
+  const { username, password, role, queue, mrn } = body;
 
   // contoh hardcode (sementara)
   if (role === "admin" && username === "admin" && password === "admin123") {
     const res = NextResponse.json({ success: true });
 
-    res.cookies.set("admin-auth", "true", {
+    res.cookies.set("auth", "admin", {
       httpOnly: true,
       path: "/",
     });
@@ -16,10 +16,10 @@ export async function POST(request) {
     return res;
   }
 
-  if (role === "pasien" && username && password) {
+  if (role === "patient" && queue === "ABC123" && mrn === "999999") {
     const res = NextResponse.json({ success: true });
 
-    res.cookies.set("pasien-auth", "true", {
+    res.cookies.set("auth", "patient", {
       httpOnly: true,
       path: "/",
     });

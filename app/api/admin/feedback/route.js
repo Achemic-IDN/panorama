@@ -3,6 +3,10 @@ import { NextResponse } from "next/server";
 // 🔹 penyimpanan sementara (in-memory)
 global.feedbacks = global.feedbacks || [];
 
+export async function GET() {
+  return NextResponse.json(global.feedbacks);
+}
+
 export async function POST(req) {
   const body = await req.json();
 

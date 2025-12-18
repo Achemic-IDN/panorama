@@ -5,7 +5,7 @@ export async function POST(request) {
   const { username, password, role, queue, mrn } = body;
 
   // contoh hardcode (sementara)
-  if (role === "admin" && username === "admin" && password === "admin123") {
+  if (role === "admin" && username === "admin" && password === "panorama") {
     const res = NextResponse.json({ success: true });
 
     res.cookies.set("auth", "admin", {

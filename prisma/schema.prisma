@@ -10,6 +10,15 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Queue {
+  id        Int      @id @default(autoincrement())
+  queue     String   @unique
+  mrn       String
+  status    String   @default("Menunggu")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Feedback {
   id      Int      @id @default(autoincrement())
   queue   String

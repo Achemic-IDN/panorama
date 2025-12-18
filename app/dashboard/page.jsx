@@ -8,8 +8,42 @@ export default function DashboardPage() {
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [history, setHistory] = useState([]);
+
+  useEffect(() => {
+    // Load history
+    fetch("/api/queue?mrn=999999")
+      .then(res => res.json())
+      .then(setHistory)
+      .catch(err => console.error("Error loading history:", err));
+  }, []);
 
   async function submitFeedback() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          queue: "ABC123",
+          mrn: "999999",
+          message,
+          rating,
+        }),
+      });
+      if (!res.ok) {
+        throw new Error("Failed to submit feedback");
+      }
+      setSent(true);
+      setMessage("");
+      setRating(5);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
     setLoading(true);
     setError(null);
     try {
@@ -142,6 +176,35 @@ export default function DashboardPage() {
               {loading ? "Mengirim..." : "Kirim Feedback"}
             </button>
           </div>
+        </div>
+
+        {/* Riwayat Antrean */}
+        <div style={{ marginTop: "40px" }}>
+          <h3 style={{ color: "#555", marginBottom: "20px" }}>Riwayat Antrean</h3>
+          <table style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+            borderRadius: "5px",
+            overflow: "hidden"
+          }}>
+            <thead style={{ background: "#f8f9fa" }}>
+              <tr>
+                <th style={{ padding: "10px", border: "1px solid #ddd", textAlign: "left" }}>Antrean</th>
+                <th style={{ padding: "10px", border: "1px solid #ddd", textAlign: "left" }}>Status</th>
+                <th style={{ padding: "10px", border: "1px solid #ddd", textAlign: "left" }}>Waktu</th>
+              </tr>
+            </thead>
+            <tbody>
+              {history.map((h, i) => (
+                <tr key={h.id} style={{ background: i % 2 === 0 ? "#fff" : "#f8f9fa" }}>
+                  <td style={{ padding: "10px", border: "1px solid #ddd" }}>{h.queue}</td>
+                  <td style={{ padding: "10px", border: "1px solid #ddd" }}>{h.status}</td>
+                  <td style={{ padding: "10px", border: "1px solid #ddd" }}>{new Date(h.createdAt).toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </main>
     </div>

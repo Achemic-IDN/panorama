@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
-  const auth = request.cookies.get("auth")?.value;
+  const cookieStore = cookies();
+  const auth = cookieStore.get("auth")?.value;
   if (auth === "admin") {
     return NextResponse.json({ role: "admin" });
   } else if (auth === "patient") {

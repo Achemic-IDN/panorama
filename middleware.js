@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 
 export function middleware(req) {
-  const auth = req.cookies.get("auth")?.value;
+  const cookieStore = cookies();
+  const auth = cookieStore.get("auth")?.value;
   const path = req.nextUrl.pathname;
 
   // ADMIN

@@ -7,8 +7,15 @@ export default async function AdminDashboard() {
     redirect('/admin/login');
   }
 
-  const res = await fetch('/api/admin/feedback');
-  const feedbacks = await res.json();
+  let feedbacks = [];
+  try {
+    const res = await fetch('/api/admin/feedback');
+    if (res.ok) {
+      feedbacks = await res.json();
+    }
+  } catch (error) {
+    console.error('Error fetching feedbacks:', error);
+  }
 
   return (
     <main style={{ padding: "40px" }}>

@@ -27,39 +27,77 @@ export default function LoginAdmin() {
   }
 
   return (
-    <main style={{ padding: "40px", maxWidth: "400px", margin: "auto" }}>
-      <h2>Login Admin PANORAMA</h2>
+    <div style={{
+      minHeight: "100vh",
+      background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontFamily: "Arial, sans-serif"
+    }}>
+      <div style={{
+        background: "white",
+        padding: "40px",
+        borderRadius: "10px",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
+        maxWidth: "400px",
+        width: "100%",
+        textAlign: "center"
+      }}>
+        <h2 style={{ marginBottom: "20px", color: "#333" }}>Login Admin PANORAMA</h2>
 
-      <input
-        placeholder="Username"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
-      />
+        <input
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "12px",
+            marginBottom: "15px",
+            border: "1px solid #ddd",
+            borderRadius: "5px",
+            fontSize: "16px",
+            boxSizing: "border-box"
+          }}
+        />
 
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
-      />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "12px",
+            marginBottom: "15px",
+            border: "1px solid #ddd",
+            borderRadius: "5px",
+            fontSize: "16px",
+            boxSizing: "border-box"
+          }}
+        />
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+        {error && <p style={{ color: "red", marginBottom: "15px" }}>{error}</p>}
 
-      <button
-        onClick={handleLogin}
-        style={{
-          width: "100%",
-          padding: "12px",
-          background: "#111827",
-          color: "white",
-          border: "none",
-          borderRadius: "6px",
-        }}
-      >
-        Login Admin
-      </button>
-    </main>
+        <button
+          onClick={handleLogin}
+          style={{
+            width: "100%",
+            padding: "12px",
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            fontSize: "16px",
+            cursor: "pointer",
+            transition: "transform 0.2s"
+          }}
+          onMouseOver={(e) => e.target.style.transform = "scale(1.05)"}
+          onMouseOut={(e) => e.target.style.transform = "scale(1)"}
+        >
+          Login Admin
+        </button>
+      </div>
+    </div>
   );
 }

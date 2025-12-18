@@ -7,12 +7,12 @@ export default function HomePage() {
   return (
     <div style={{
       minHeight: "100vh",
-      background: "linear-gradient(135deg, #3685fc 0%, #1e3a8a 100%)",
+      background: "linear-gradient(135deg, #87ceeb 0%, #ffffff 100%)",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
       fontFamily: "Arial, sans-serif",
-      color: "white"
+      color: "#333"
     }}>
       <main style={{
         textAlign: "center",

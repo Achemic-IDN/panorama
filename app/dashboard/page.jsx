@@ -41,71 +41,87 @@ export default function DashboardPage() {
       }}>
         <h1 style={{ textAlign: "center", color: "#333", marginBottom: "30px" }}>Dashboard Pasien</h1>
 
-        <section style={{ marginTop: "30px" }}>
-          <h3 style={{ color: "#555", marginBottom: "20px" }}>Feedback Pelayanan</h3>
-
-          {sent && <p style={{
-            color: "green",
-            background: "#d4edda",
-            padding: "10px",
-            borderRadius: "5px",
-            marginBottom: "15px"
-          }}>✔ Feedback terkirim</p>}
-
-          <textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Tulis kritik atau saran..."
-            style={{
-              width: "100%",
-              height: "100px",
-              padding: "12px",
-              border: "1px solid #ddd",
-              borderRadius: "5px",
-              fontSize: "16px",
-              boxSizing: "border-box",
-              marginBottom: "15px"
-            }}
-          />
-
-          <div style={{ marginBottom: "15px" }}>
-            <label style={{ display: "block", marginBottom: "5px", color: "#555" }}>Rating: </label>
-            <select
-              value={rating}
-              onChange={(e) => setRating(Number(e.target.value))}
-              style={{
-                padding: "10px",
-                border: "1px solid #ddd",
-                borderRadius: "5px",
-                fontSize: "16px"
-              }}
-            >
-              <option value={1}>⭐ 1 Bintang</option>
-              <option value={2}>⭐⭐ 2 Bintang</option>
-              <option value={3}>⭐⭐⭐ 3 Bintang</option>
-              <option value={4}>⭐⭐⭐⭐ 4 Bintang</option>
-              <option value={5}>⭐⭐⭐⭐⭐ 5 Bintang</option>
-            </select>
+        <div style={{ display: "flex", gap: "40px", alignItems: "flex-start" }}>
+          <div style={{ flex: 1 }}>
+            <h3 style={{ color: "#555", marginBottom: "20px" }}>Informasi Pasien</h3>
+            <div style={{
+              background: "#f8f9fa",
+              padding: "20px",
+              borderRadius: "8px",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.1)"
+            }}>
+              <p><strong>Nomor Antrean:</strong> ABC123</p>
+              <p><strong>Nomor MRN:</strong> 999999</p>
+              <p><strong>Status:</strong> Menunggu</p>
+            </div>
           </div>
 
-          <button
-            onClick={submitFeedback}
-            style={{
-              padding: "12px 24px",
-              background: "linear-gradient(135deg, #3685fc 0%, #1e3a8a 100%)",
-              color: "white",
-              border: "none",
+          <div style={{ flex: 1 }}>
+            <h3 style={{ color: "#555", marginBottom: "20px" }}>Feedback Pelayanan</h3>
+
+            {sent && <p style={{
+              color: "green",
+              background: "#d4edda",
+              padding: "10px",
               borderRadius: "5px",
-              fontSize: "16px",
-              cursor: "pointer",
-              transition: "transform 0.2s"
-            }}
-            onMouseOver={(e) => e.target.style.transform = "scale(1.05)"}
-            onMouseOut={(e) => e.target.style.transform = "scale(1)"}
-          >
-            Kirim Feedback
-          </button>
-        </section>
+              marginBottom: "15px"
+            }}>✔ Feedback terkirim</p>}
+
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Tulis kritik atau saran..."
+              style={{
+                width: "100%",
+                height: "100px",
+                padding: "12px",
+                border: "1px solid #ddd",
+                borderRadius: "5px",
+                fontSize: "16px",
+                boxSizing: "border-box",
+                marginBottom: "15px"
+              }}
+            />
+
+            <div style={{ marginBottom: "15px" }}>
+              <label style={{ display: "block", marginBottom: "5px", color: "#555" }}>Rating: </label>
+              <select
+                value={rating}
+                onChange={(e) => setRating(Number(e.target.value))}
+                style={{
+                  padding: "10px",
+                  border: "1px solid #ddd",
+                  borderRadius: "5px",
+                  fontSize: "16px"
+                }}
+              >
+                <option value={1}>⭐ 1 Bintang</option>
+                <option value={2}>⭐⭐ 2 Bintang</option>
+                <option value={3}>⭐⭐⭐ 3 Bintang</option>
+                <option value={4}>⭐⭐⭐⭐ 4 Bintang</option>
+                <option value={5}>⭐⭐⭐⭐⭐ 5 Bintang</option>
+              </select>
+            </div>
+
+            <button
+              onClick={submitFeedback}
+              style={{
+                padding: "12px 24px",
+                background: "linear-gradient(135deg, #3685fc 0%, #1e3a8a 100%)",
+                color: "white",
+                border: "none",
+                borderRadius: "5px",
+                fontSize: "16px",
+                cursor: "pointer",
+                transition: "transform 0.2s"
+              }}
+              onMouseOver={(e) => e.target.style.transform = "scale(1.05)"}
+              onMouseOut={(e) => e.target.style.transform = "scale(1)"}
+            >
+              Kirim Feedback
+            </button>
+          </div>
+        </div>
       </main>
     </div>
   );

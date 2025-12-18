@@ -1,22 +1,20 @@
 import { NextResponse } from "next/server";
 
-export function middleware(request) {
-  const { pathname } = request.nextUrl;
+export function middleware(req) {
+  const auth = req.cookies.get("auth")?.value;
+  const path = req.nextUrl.pathname;
 
-  const adminAuth = request.cookies.get("admin-auth");
-  const pasienAuth = request.cookies.get("pasien-auth");
-
-  // 🔒 ADMIN
-  if (pathname.startsWith("/admin")) {
-    if (!adminAuth) {
-      return NextResponse.redirect(new URL("/login/admin", request.url));
+  // ADMIN
+  if (path.startsWith("/admin/dashboard")) {
+    if (auth !== "admin") {
+      return NextResponse.redirect(new URL("/admin/login", req.url));
     }
   }
 
-  // 🔒 PASIEN
-  if (pathname.startsWith("/dashboard")) {
-    if (!pasienAuth) {
-      return NextResponse.redirect(new URL("/login", request.url));
+  // PASIEN
+  if (path.startsWith("/dashboard")) {
+    if (!auth || auth === "admin") {
+      return NextResponse.redirect(new URL("/login", req.url));
     }
   }
 
@@ -24,5 +22,5 @@ export function middleware(request) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/dashboard/:path*"],
+  matcher: ["/dashboard/:path*", "/admin/dashboard/:path*"],
 };

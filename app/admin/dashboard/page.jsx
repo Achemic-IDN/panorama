@@ -1,20 +1,30 @@
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
+"use client";
 
-export default async function AdminDashboard() {
-  const cookie = cookies().get('auth');
-  if (!cookie || cookie.value !== 'admin') {
-    redirect('/admin/login');
-  }
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
-  let feedbacks = [];
-  try {
-    const res = await fetch('/api/admin/feedback');
-    if (res.ok) {
-      feedbacks = await res.json();
+export default function AdminDashboard() {
+  const router = useRouter();
+  const [feedbacks, setFeedbacks] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function checkAuth() {
+      const res = await fetch("/api/auth/check");
+      const data = await res.json();
+      if (data.role !== "admin") {
+        router.push("/admin/login");
+        return;
+      }
+      // If admin, load feedbacks
+      const feedbackRes = await fetch("/api/admin/feedback");
+      const feedbackData = await feedbackRes.json();
+      setFeedbacks(feedbackData);
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Error fetching feedbacks:', error);
+    checkAuth();
+  if (loading) {
+    return <div>Loading...</div>;
   }
 
   return (

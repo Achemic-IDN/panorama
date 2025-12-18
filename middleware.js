@@ -2,21 +2,21 @@ import { NextResponse } from "next/server";
 
 export function middleware(request) {
   const { pathname } = request.nextUrl;
-  const auth = request.cookies.get("auth")?.value;
 
-  // 🔐 Proteksi dashboard admin
-  if (pathname.startsWith("/admin/dashboard")) {
-    if (!auth) {
-      return NextResponse.redirect(new URL("/admin/login", request.url));
+  const adminAuth = request.cookies.get("admin-auth");
+  const pasienAuth = request.cookies.get("pasien-auth");
+
+  // 🔒 ADMIN
+  if (pathname.startsWith("/admin")) {
+    if (!adminAuth) {
+      return NextResponse.redirect(new URL("/login/admin", request.url));
     }
+  }
 
-    try {
-      const parsed = JSON.parse(auth);
-      if (parsed.role !== "admin") {
-        return NextResponse.redirect(new URL("/admin/login", request.url));
-      }
-    } catch {
-      return NextResponse.redirect(new URL("/admin/login", request.url));
+  // 🔒 PASIEN
+  if (pathname.startsWith("/dashboard")) {
+    if (!pasienAuth) {
+      return NextResponse.redirect(new URL("/login", request.url));
     }
   }
 
@@ -24,5 +24,5 @@ export function middleware(request) {
 }
 
 export const config = {
-  matcher: ["/admin/dashboard/:path*"],
+  matcher: ["/admin/:path*", "/dashboard/:path*"],
 };

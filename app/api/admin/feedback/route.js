@@ -1,49 +1,38 @@
 import { NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
-
-const feedbackFile = path.join(process.cwd(), "feedback.json");
-
-function loadFeedbacks() {
-  try {
-    const data = fs.readFileSync(feedbackFile, "utf8");
-    return JSON.parse(data);
-  } catch (error) {
-    return [];
-  }
-}
-
-function saveFeedbacks(feedbacks) {
-  try {
-    fs.writeFileSync(feedbackFile, JSON.stringify(feedbacks, null, 2));
-  } catch (error) {
-    console.error("Error saving feedbacks:", error);
-  }
-}
+import { prisma } from "../../../lib/prisma";
 
 export async function GET() {
-  const feedbacks = loadFeedbacks();
-  return NextResponse.json(feedbacks);
+  try {
+    const feedbacks = await prisma.feedback.findMany({
+      orderBy: { time: 'desc' },
+    });
+    return NextResponse.json(feedbacks);
+  } catch (error) {
+    console.error("Error fetching feedbacks:", error);
+    return NextResponse.json({ error: "Failed to fetch feedbacks" }, { status: 500 });
+  }
 }
 
 export async function POST(req) {
-  const body = await req.json();
+  try {
+    const body = await req.json();
 
-  if (!body.queue || !body.mrn || !body.message) {
-    return new NextResponse("Invalid data", { status: 400 });
+    if (!body.queue || !body.mrn || !body.message) {
+      return new NextResponse("Invalid data", { status: 400 });
+    }
+
+    const feedback = await prisma.feedback.create({
+      data: {
+        queue: body.queue,
+        mrn: body.mrn,
+        message: body.message,
+        rating: body.rating || 5,
+      },
+    });
+
+    return NextResponse.json({ success: true, feedback });
+  } catch (error) {
+    console.error("Error creating feedback:", error);
+    return NextResponse.json({ error: "Failed to create feedback" }, { status: 500 });
   }
-
-  const feedbacks = loadFeedbacks();
-  const feedback = {
-    queue: body.queue,
-    mrn: body.mrn,
-    message: body.message,
-    rating: body.rating || 5,
-    time: new Date().toISOString(),
-  };
-
-  feedbacks.push(feedback);
-  saveFeedbacks(feedbacks);
-
-  return NextResponse.json({ success: true });
 }

@@ -6,22 +6,34 @@ export default function DashboardPage() {
   const [message, setMessage] = useState("");
   const [rating, setRating] = useState(5);
   const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   async function submitFeedback() {
-    await fetch("/api/feedback", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        queue: "ABC123",
-        mrn: "999999",
-        message,
-        rating,
-      }),
-    });
-
-    setSent(true);
-    setMessage("");
-    setRating(5);
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          queue: "ABC123",
+          mrn: "999999",
+          message,
+          rating,
+        }),
+      });
+      if (!res.ok) {
+        throw new Error("Failed to submit feedback");
+      }
+      setSent(true);
+      setMessage("");
+      setRating(5);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -67,6 +79,14 @@ export default function DashboardPage() {
               marginBottom: "15px"
             }}>✔ Feedback terkirim</p>}
 
+            {error && <p style={{
+              color: "red",
+              background: "#f8d7da",
+              padding: "10px",
+              borderRadius: "5px",
+              marginBottom: "15px"
+            }}>Error: {error}</p>}
+
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
@@ -105,20 +125,21 @@ export default function DashboardPage() {
 
             <button
               onClick={submitFeedback}
+              disabled={loading}
               style={{
                 padding: "12px 24px",
-                background: "linear-gradient(135deg, #3685fc 0%, #1e3a8a 100%)",
+                background: loading ? "#ccc" : "linear-gradient(135deg, #3685fc 0%, #1e3a8a 100%)",
                 color: "white",
                 border: "none",
                 borderRadius: "5px",
                 fontSize: "16px",
-                cursor: "pointer",
+                cursor: loading ? "not-allowed" : "pointer",
                 transition: "transform 0.2s"
               }}
-              onMouseOver={(e) => e.target.style.transform = "scale(1.05)"}
-              onMouseOut={(e) => e.target.style.transform = "scale(1)"}
+              onMouseOver={(e) => !loading && e.target.style.transform = "scale(1.05)"}
+              onMouseOut={(e) => !loading && e.target.style.transform = "scale(1)"}
             >
-              Kirim Feedback
+              {loading ? "Mengirim..." : "Kirim Feedback"}
             </button>
           </div>
         </div>

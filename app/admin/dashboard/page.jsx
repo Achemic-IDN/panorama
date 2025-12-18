@@ -7,26 +7,39 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     async function checkAuth() {
-      const res = await fetch("/api/auth/check");
-      const data = await res.json();
-      if (data.role !== "admin") {
-        router.push("/admin/login");
-        return;
+      try {
+        const res = await fetch("/api/auth/check");
+        const data = await res.json();
+        if (data.role !== "admin") {
+          router.push("/admin/login");
+          return;
+        }
+        // If admin, load feedbacks
+        const feedbackRes = await fetch("/api/admin/feedback");
+        if (!feedbackRes.ok) {
+          throw new Error("Failed to fetch feedbacks");
+        }
+        const feedbackData = await feedbackRes.json();
+        setFeedbacks(feedbackData);
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
       }
-      // If admin, load feedbacks
-      const feedbackRes = await fetch("/api/admin/feedback");
-      const feedbackData = await feedbackRes.json();
-      setFeedbacks(feedbackData);
-      setLoading(false);
     }
     checkAuth();
   }, [router]);
 
   if (loading) {
     return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
   }
 
   return (

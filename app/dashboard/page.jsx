@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function DashboardPage() {
   const [message, setMessage] = useState("");
@@ -19,31 +19,6 @@ export default function DashboardPage() {
   }, []);
 
   async function submitFeedback() {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/feedback", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          queue: "ABC123",
-          mrn: "999999",
-          message,
-          rating,
-        }),
-      });
-      if (!res.ok) {
-        throw new Error("Failed to submit feedback");
-      }
-      setSent(true);
-      setMessage("");
-      setRating(5);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }
     setLoading(true);
     setError(null);
     try {

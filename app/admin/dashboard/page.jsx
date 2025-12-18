@@ -58,6 +58,7 @@ export default function AdminDashboard() {
             <tr>
               <th style={{ padding: "12px", border: "1px solid #ddd", textAlign: "left" }}>Antrean</th>
               <th style={{ padding: "12px", border: "1px solid #ddd", textAlign: "left" }}>MRN</th>
+              <th style={{ padding: "12px", border: "1px solid #ddd", textAlign: "left" }}>Status</th>
               <th style={{ padding: "12px", border: "1px solid #ddd", textAlign: "left" }}>Pesan</th>
               <th style={{ padding: "12px", border: "1px solid #ddd", textAlign: "left" }}>Rating</th>
               <th style={{ padding: "12px", border: "1px solid #ddd", textAlign: "left" }}>Waktu</th>
@@ -68,6 +69,7 @@ export default function AdminDashboard() {
               <tr key={i} style={{ background: i % 2 === 0 ? "#fff" : "#f8f9fa" }}>
                 <td style={{ padding: "12px", border: "1px solid #ddd" }}>{f.queue}</td>
                 <td style={{ padding: "12px", border: "1px solid #ddd" }}>{f.mrn}</td>
+                <td style={{ padding: "12px", border: "1px solid #ddd" }}>Menunggu</td>
                 <td style={{ padding: "12px", border: "1px solid #ddd" }}>{f.message}</td>
                 <td style={{ padding: "12px", border: "1px solid #ddd" }}>{'⭐'.repeat(f.rating)} ({f.rating})</td>
                 <td style={{ padding: "12px", border: "1px solid #ddd" }}>{new Date(f.time).toLocaleString()}</td>

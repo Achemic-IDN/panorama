@@ -4,6 +4,7 @@ import { useState } from "react";
 
 export default function DashboardPage() {
   const [message, setMessage] = useState("");
+  const [rating, setRating] = useState(5);
   const [sent, setSent] = useState(false);
 
   async function submitFeedback() {
@@ -14,11 +15,13 @@ export default function DashboardPage() {
         queue: "ABC123",
         mrn: "999999",
         message,
+        rating,
       }),
     });
 
     setSent(true);
     setMessage("");
+    setRating(5);
   }
 
   return (
@@ -36,6 +39,21 @@ export default function DashboardPage() {
           placeholder="Tulis kritik atau saran..."
           style={{ width: "100%", height: "100px" }}
         />
+
+        <div style={{ marginTop: "10px" }}>
+          <label>Rating: </label>
+          <select
+            value={rating}
+            onChange={(e) => setRating(Number(e.target.value))}
+            style={{ padding: "5px" }}
+          >
+            <option value={1}>1 Bintang</option>
+            <option value={2}>2 Bintang</option>
+            <option value={3}>3 Bintang</option>
+            <option value={4}>4 Bintang</option>
+            <option value={5}>5 Bintang</option>
+          </select>
+        </div>
 
         <button
           onClick={submitFeedback}

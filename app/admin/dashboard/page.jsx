@@ -39,6 +39,7 @@ export default function AdminDashboard() {
             <th>Antrean</th>
             <th>MRN</th>
             <th>Pesan</th>
+            <th>Rating</th>
             <th>Waktu</th>
           </tr>
         </thead>
@@ -48,6 +49,7 @@ export default function AdminDashboard() {
               <td>{f.queue}</td>
               <td>{f.mrn}</td>
               <td>{f.message}</td>
+              <td>{f.rating} Bintang</td>
               <td>{new Date(f.time).toLocaleString()}</td>
             </tr>
           ))}

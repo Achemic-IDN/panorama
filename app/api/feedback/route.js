@@ -14,6 +14,7 @@ export async function POST(req) {
     queue: body.queue,
     mrn: body.mrn,
     message: body.message,
+    rating: body.rating || 5,
     time: new Date().toISOString(),
   };
 

@@ -6,34 +6,36 @@ import { useRouter } from "next/navigation";
 export default function DashboardPage() {
   const router = useRouter();
   const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/dashboard", { cache: "no-store" })
-      .then((res) => res.json())
-      .then((json) => {
-        setData(json);
-        setLoading(false);
+    fetch("/api/dashboard")
+      .then((res) => {
+        if (!res.ok) throw new Error("Unauthorized");
+        return res.json();
       })
-      .catch(() => {
-        router.push("/login");
-      });
+      .then(setData)
+      .catch(() => router.push("/login"));
   }, [router]);
 
-  if (loading) {
+  if (!data) {
     return <p style={{ padding: 40 }}>Memuat dashboard...</p>;
   }
 
   return (
     <main style={{ padding: 40, fontFamily: "Arial" }}>
-      <h1>Selamat Datang</h1>
+      <h1>Dashboard Pasien</h1>
 
       <p>
-        Nomor Antrean: <strong>{data.queue}</strong>
+        <strong>Nomor Antrean:</strong> {data.queue}
       </p>
 
       <h3>Status Resep</h3>
-      <table border="1" cellPadding="10" style={{ marginBottom: 20 }}>
+
+      <table
+        border="1"
+        cellPadding="10"
+        style={{ borderCollapse: "collapse", marginTop: 10 }}
+      >
         <thead>
           <tr>
             <th>Tahap</th>
@@ -41,18 +43,29 @@ export default function DashboardPage() {
           </tr>
         </thead>
         <tbody>
-          <tr><td>Entry</td><td>{data.status === "ENTRY" ? "⏳ Proses" : "✔ Selesai"}</td></tr>
-          <tr><td>Transport</td><td>{data.status === "TRANSPORT" ? "⏳ Proses" : data.status === "ENTRY" ? "-" : "✔ Selesai"}</td></tr>
-          <tr><td>Pengemasan</td><td>{data.status === "PACKAGING" ? "⏳ Proses" : ["READY"].includes(data.status) ? "✔ Selesai" : "-"}</td></tr>
-          <tr><td>Siap Diambil</td><td>{data.status === "READY" ? "✔ Ya" : "Belum"}</td></tr>
+          {["Entry", "Transport", "Pengemasan", "Siap Diambil"].map(
+            (step, i) => (
+              <tr key={i}>
+                <td>{step}</td>
+                <td>
+                  {data.status === step ? "⏳ Proses" : "✔ Selesai"}
+                </td>
+              </tr>
+            )
+          )}
         </tbody>
       </table>
 
-      <h3>Feedback</h3>
+      <h3 style={{ marginTop: 30 }}>Kirim Feedback</h3>
+
       <textarea
-        placeholder="Tulis penilaian Anda..."
+        placeholder="Tulis pengalaman kamu..."
         style={{ width: "100%", height: 80 }}
       />
+
+      <br />
+
+      <button style={{ marginTop: 10 }}>Kirim Feedback</button>
 
       <br /><br />
 

@@ -1,15 +1,7 @@
 import { NextResponse } from "next/server";
-import { addFeedback } from "@/app/lib/feedbackStore";
 
-export async function POST(req) {
-  const body = await req.json();
-
-  addFeedback({
-    queue: body.queue,
-    mrn: body.mrn,
-    message: body.message,
-    time: new Date().toISOString(),
+export async function GET() {
+  return NextResponse.json({
+    feedbacks: global.feedbacks || [],
   });
-
-  return NextResponse.json({ success: true });
 }

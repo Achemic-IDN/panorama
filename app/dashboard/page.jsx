@@ -61,7 +61,7 @@ export default function DashboardPage() {
   return (
     <div style={{
       minHeight: "100vh",
-      background: "linear-gradient(135deg, #3685fc 0%, #1e3a8a 100%)",
+      background: "linear-gradient(135deg, #ff0000 0%, #8b0000 100%)",
       fontFamily: "Arial, sans-serif",
       padding: "20px"
     }}>
@@ -150,7 +150,7 @@ export default function DashboardPage() {
               disabled={loading}
               style={{
                 padding: "12px 24px",
-                background: loading ? "#ccc" : "linear-gradient(135deg, #3685fc 0%, #1e3a8a 100%)",
+                background: loading ? "#ccc" : "linear-gradient(135deg, #ff0000 0%, #8b0000 100%)",
                 color: "white",
                 border: "none",
                 borderRadius: "5px",

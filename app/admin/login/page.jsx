@@ -29,7 +29,7 @@ export default function LoginAdmin() {
   return (
     <div style={{
       minHeight: "100vh",
-      background: "linear-gradient(135deg, #3685fc 0%, #1e3a8a 100%)",
+      background: "linear-gradient(135deg, #ff0000 0%, #8b0000 100%)",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
@@ -84,7 +84,7 @@ export default function LoginAdmin() {
           style={{
             width: "100%",
             padding: "12px",
-            background: "linear-gradient(135deg, #3685fc 0%, #1e3a8a 100%)",
+            background: "linear-gradient(135deg, #ff0000 0%, #8b0000 100%)",
             color: "white",
             border: "none",
             borderRadius: "5px",

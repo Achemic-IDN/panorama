@@ -23,6 +23,8 @@ export default function AdminDashboard() {
       setLoading(false);
     }
     checkAuth();
+  }, [router]);
+
   if (loading) {
     return <div>Loading...</div>;
   }

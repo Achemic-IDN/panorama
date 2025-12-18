@@ -20,17 +20,29 @@ export default function AdminDashboard() {
           return;
         }
         // Load feedbacks and queues
-        const [feedbackRes, queueRes] = await Promise.all([
-          fetch("/api/admin/feedback"),
-          fetch("/api/admin/queue")
-        ]);
-        if (!feedbackRes.ok || !queueRes.ok) {
-          throw new Error("Failed to fetch data");
+        const feedbackRes = await fetch("/api/admin/feedback");
+        const queueRes = await fetch("/api/admin/queue");
+
+        let feedbackData = [];
+        let queueData = [];
+
+        if (feedbackRes.ok) {
+          const data = await feedbackRes.json();
+          feedbackData = Array.isArray(data) ? data : [];
+        } else {
+          console.error("Failed to fetch feedbacks");
         }
-        const feedbackData = await feedbackRes.json();
-        const queueData = await queueRes.json();
-        setFeedbacks(Array.isArray(feedbackData) ? feedbackData : []);
-        setQueues(Array.isArray(queueData) ? queueData : []);
+
+        if (queueRes.ok) {
+          const data = await queueRes.json();
+          queueData = Array.isArray(data) ? data : [];
+        } else {
+          console.error("Failed to fetch queues");
+        }
+
+        setFeedbacks(feedbackData);
+        setQueues(queueData);
+        setLoading(false);
         setLoading(false);
       } catch (err) {
         setError(err.message);

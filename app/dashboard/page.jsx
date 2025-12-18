@@ -1,82 +1,42 @@
 "use client";
+import { useState } from "react";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+export default function FeedbackForm({ queue, mrn }) {
+  const [message, setMessage] = useState("");
+  const [sent, setSent] = useState(false);
 
-export default function DashboardPage() {
-  const router = useRouter();
-  const [data, setData] = useState(null);
+  const submitFeedback = async () => {
+    await fetch("/api/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        queue,
+        mrn,
+        message,
+      }),
+    });
 
-  useEffect(() => {
-    fetch("/api/dashboard")
-      .then((res) => {
-        if (!res.ok) throw new Error("Unauthorized");
-        return res.json();
-      })
-      .then(setData)
-      .catch(() => router.push("/login"));
-  }, [router]);
+    setSent(true);
+    setMessage("");
+  };
 
-  if (!data) {
-    return <p style={{ padding: 40 }}>Memuat dashboard...</p>;
+  if (sent) {
+    return <p>✅ Terima kasih atas feedback Anda</p>;
   }
 
   return (
-    <main style={{ padding: 40, fontFamily: "Arial" }}>
-      <h1>Dashboard Pasien</h1>
-
-      <p>
-        <strong>Nomor Antrean:</strong> {data.queue}
-      </p>
-
-      <h3>Status Resep</h3>
-
-      <table
-        border="1"
-        cellPadding="10"
-        style={{ borderCollapse: "collapse", marginTop: 10 }}
-      >
-        <thead>
-          <tr>
-            <th>Tahap</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {["Entry", "Transport", "Pengemasan", "Siap Diambil"].map(
-            (step, i) => (
-              <tr key={i}>
-                <td>{step}</td>
-                <td>
-                  {data.status === step ? "⏳ Proses" : "✔ Selesai"}
-                </td>
-              </tr>
-            )
-          )}
-        </tbody>
-      </table>
-
-      <h3 style={{ marginTop: 30 }}>Kirim Feedback</h3>
-
+    <div style={{ marginTop: "30px" }}>
+      <h3>Feedback Pelayanan</h3>
       <textarea
-        placeholder="Tulis pengalaman kamu..."
-        style={{ width: "100%", height: 80 }}
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        rows={4}
+        style={{ width: "100%", padding: "10px" }}
+        placeholder="Tulis kritik atau saran..."
       />
-
-      <br />
-
-      <button style={{ marginTop: 10 }}>Kirim Feedback</button>
-
-      <br /><br />
-
-      <button
-        onClick={async () => {
-          await fetch("/api/auth/logout", { method: "POST" });
-          router.push("/login");
-        }}
-      >
-        Logout
+      <button onClick={submitFeedback} style={{ marginTop: "10px" }}>
+        Kirim Feedback
       </button>
-    </main>
+    </div>
   );
 }

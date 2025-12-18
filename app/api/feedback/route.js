@@ -1,49 +1,54 @@
 import { NextResponse } from "next/server";
+import fs from "fs";
+import path from "path";
+import { cookies } from "next/headers";
 
-// Simpan sementara di memory (prototype)
-let feedbacks = [];
+const filePath = path.join(process.cwd(), "data", "feedback.json");
 
-export async function POST(request) {
-  try {
-    const body = await request.json();
-
-    const { nama, nomorAntrian, pesan } = body;
-
-    if (!nama || !nomorAntrian || !pesan) {
-      return NextResponse.json(
-        { success: false, message: "Data tidak lengkap" },
-        { status: 400 }
-      );
-    }
-
-    const newFeedback = {
-      id: Date.now(),
-      nama,
-      nomorAntrian,
-      pesan,
-      waktu: new Date().toISOString(),
-    };
-
-    feedbacks.push(newFeedback);
-
-    return NextResponse.json({
-      success: true,
-      message: "Feedback berhasil dikirim",
-      data: newFeedback,
-    });
-  } catch (error) {
-    return NextResponse.json(
-      { success: false, message: "Terjadi kesalahan server" },
-      { status: 500 }
-    );
-  }
+// pastikan folder & file ada
+function ensureFile() {
+  const dir = path.join(process.cwd(), "data");
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+  if (!fs.existsSync(filePath)) fs.writeFileSync(filePath, "[]");
 }
 
-// OPTIONAL: untuk admin melihat semua feedback
+// =====================
+// POST → SIMPAN FEEDBACK
+// =====================
+export async function POST(req) {
+  ensureFile();
+
+  const cookie = cookies().get("auth");
+  if (!cookie) {
+    return new NextResponse("Unauthorized", { status: 401 });
+  }
+
+  const body = await req.json();
+  const feedback = {
+    queue: body.queue,
+    mrn: body.mrn,
+    message: body.message,
+    time: new Date().toISOString(),
+  };
+
+  const data = JSON.parse(fs.readFileSync(filePath));
+  data.push(feedback);
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+
+  return NextResponse.json({ success: true });
+}
+
+// =====================
+// GET → AMBIL SEMUA FEEDBACK (ADMIN)
+// =====================
 export async function GET() {
-  return NextResponse.json({
-    success: true,
-    total: feedbacks.length,
-    data: feedbacks,
-  });
+  ensureFile();
+
+  const cookie = cookies().get("auth");
+  if (!cookie || cookie.value !== "admin") {
+    return new NextResponse("Forbidden", { status: 403 });
+  }
+
+  const data = JSON.parse(fs.readFileSync(filePath));
+  return NextResponse.json(data.reverse());
 }

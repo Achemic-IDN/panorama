@@ -1,17 +1,15 @@
 import { NextResponse } from "next/server";
-import { feedbackStore } from "@/app/lib/feedbackStore";
+import { addFeedback } from "@/app/lib/feedbackStore";
 
 export async function POST(req) {
   const body = await req.json();
 
-  const feedback = {
+  addFeedback({
+    role: "patient",
     queue: body.queue,
     mrn: body.mrn,
     message: body.message,
-    time: new Date().toISOString(),
-  };
-
-  feedbackStore.push(feedback);
+  });
 
   return NextResponse.json({ success: true });
 }

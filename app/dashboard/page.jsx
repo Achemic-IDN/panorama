@@ -28,7 +28,11 @@ export default function DashboardPage() {
       <section style={{ marginTop: "30px" }}>
         <h3>Feedback Pelayanan</h3>
 
-        {sent && <p style={{ color: "green" }}>✔ Feedback terkirim</p>}
+        {sent && (
+          <p style={{ color: "green" }}>
+            ✅ Feedback terkirim
+          </p>
+        )}
 
         <textarea
           value={message}

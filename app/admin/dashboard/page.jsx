@@ -1,15 +1,14 @@
-"use client";
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
-import { useEffect, useState } from "react";
+export default async function AdminDashboard() {
+  const cookie = cookies().get('auth');
+  if (!cookie || cookie.value !== 'admin') {
+    redirect('/admin/login');
+  }
 
-export default function AdminDashboard() {
-  const [feedbacks, setFeedbacks] = useState([]);
-
-  useEffect(() => {
-    fetch("/api/admin/feedback")
-      .then((res) => res.json())
-      .then(setFeedbacks);
-  }, []);
+  const res = await fetch('/api/admin/feedback');
+  const feedbacks = await res.json();
 
   return (
     <main style={{ padding: "40px" }}>

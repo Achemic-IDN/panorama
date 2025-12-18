@@ -10,6 +10,8 @@ export async function POST(request) {
 
     res.cookies.set("auth", "admin", {
       httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
       path: "/",
     });
 
@@ -21,6 +23,8 @@ export async function POST(request) {
 
     res.cookies.set("auth", "patient", {
       httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
       path: "/",
     });
 

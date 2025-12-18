@@ -1,12 +1,9 @@
-// app/lib/feedbackStore.js
+// SIMPAN FEEDBACK DI MEMORY (sementara, untuk prototype)
 
 let feedbacks = [];
 
 export function addFeedback(data) {
-  feedbacks.push({
-    ...data,
-    time: new Date().toISOString(),
-  });
+  feedbacks.push(data);
 }
 
 export function getAllFeedback() {

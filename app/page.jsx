@@ -7,7 +7,7 @@ export default function HomePage() {
   return (
     <div style={{
       minHeight: "100vh",
-      background: "linear-gradient(135deg, #28a745 0%, #ffffff 100%)",
+      background: "linear-gradient(135deg, #007bff 0%, #ffffff 100%)",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
@@ -35,19 +35,19 @@ export default function HomePage() {
               fontSize: "18px",
               borderRadius: "8px",
               border: "none",
-              background: "linear-gradient(135deg, #28a745 0%, #20c997 100%)",
+              background: "linear-gradient(135deg, #007bff 0%, #1e3a8a 100%)",
               color: "white",
               cursor: "pointer",
               transition: "transform 0.3s, box-shadow 0.3s",
-              boxShadow: "0 4px 15px rgba(40, 167, 69, 0.3)"
+              boxShadow: "0 4px 15px rgba(0, 123, 255, 0.3)"
             }}
             onMouseOver={(e) => {
               e.target.style.transform = "scale(1.05)";
-              e.target.style.boxShadow = "0 6px 20px rgba(40, 167, 69, 0.4)";
+              e.target.style.boxShadow = "0 6px 20px rgba(0, 123, 255, 0.4)";
             }}
             onMouseOut={(e) => {
               e.target.style.transform = "scale(1)";
-              e.target.style.boxShadow = "0 4px 15px rgba(40, 167, 69, 0.3)";
+              e.target.style.boxShadow = "0 4px 15px rgba(0, 123, 255, 0.3)";
             }}
           >
             Login Pasien

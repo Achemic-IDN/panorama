@@ -100,7 +100,7 @@ export default function AdminDashboard() {
   return (
     <div style={{
       minHeight: "100vh",
-      background: "linear-gradient(135deg, #ff0000 0%, #8b0000 100%)",
+      background: "linear-gradient(135deg, #007bff 0%, #e3f2fd 100%)",
       fontFamily: "Arial, sans-serif",
       padding: "20px"
     }}>
@@ -112,7 +112,7 @@ export default function AdminDashboard() {
         borderRadius: "10px",
         boxShadow: "0 10px 30px rgba(0,0,0,0.1)"
       }}>
-        <h1 style={{ textAlign: "center", color: "#333", marginBottom: "30px" }}>Dashboard Admin Panorama</h1>
+        <h1 style={{ textAlign: "center", color: "#007bff", marginBottom: "30px" }}>Dashboard Admin Panorama</h1>
 
         {/* Statistik */}
         <div style={{ display: "flex", gap: "20px", marginBottom: "30px", flexWrap: "wrap" }}>

@@ -70,6 +70,14 @@ export default function AdminDashboard() {
   const [newQueue, setNewQueue] = useState("");
   const [newMrn, setNewMrn] = useState("");
 
+  // Calculate stats from queues
+  const stats = {
+    total: queues.length,
+    waiting: queues.filter(q => q.status === "Menunggu").length,
+    called: queues.filter(q => q.status === "Dipanggil").length,
+    completed: queues.filter(q => q.status === "Selesai").length,
+  };
+
   const createQueue = async () => {
     if (!newQueue || !newMrn) return;
     try {

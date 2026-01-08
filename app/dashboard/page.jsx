@@ -148,18 +148,18 @@ export default function DashboardPage() {
             <button
               onClick={submitFeedback}
               disabled={loading}
-              style={{
-                padding: "12px 24px",
-                background: loading ? "#ccc" : "linear-gradient(135deg, #3685fc 0%, #1e3a8a 100%)",
-                color: "white",
-                border: "none",
-                borderRadius: "5px",
-                fontSize: "16px",
-                cursor: loading ? "not-allowed" : "pointer",
-                transition: "transform 0.2s"
-              }}
-              onMouseOver={(e) => { if (!loading) e.target.style.transform = "scale(1.05)"; }}
-              onMouseOut={(e) => { if (!loading) e.target.style.transform = "scale(1)"; }}
+            style={{
+              padding: "12px 24px",
+              background: loading ? "#ccc" : "linear-gradient(135deg, #28a745 0%, #20c997 100%)",
+              color: "white",
+              border: "none",
+              borderRadius: "5px",
+              fontSize: "16px",
+              cursor: loading ? "not-allowed" : "pointer",
+              transition: "transform 0.2s"
+            }}
+            onMouseOver={(e) => { if (!loading) e.target.style.transform = "scale(1.05)"; }}
+            onMouseOut={(e) => { if (!loading) e.target.style.transform = "scale(1)"; }}
             >
               {loading ? "Mengirim..." : "Kirim Feedback"}
             </button>

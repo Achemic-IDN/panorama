@@ -29,7 +29,7 @@ export default function LoginPasien() {
   return (
     <div style={{
       minHeight: "100vh",
-      background: "linear-gradient(135deg, #3685fc 0%, #1e3a8a 100%)",
+      background: "linear-gradient(135deg, #28a745 0%, #ffffff 100%)",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",

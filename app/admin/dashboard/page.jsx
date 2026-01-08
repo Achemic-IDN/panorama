@@ -112,7 +112,7 @@ export default function AdminDashboard() {
         borderRadius: "10px",
         boxShadow: "0 10px 30px rgba(0,0,0,0.1)"
       }}>
-        <h1 style={{ textAlign: "center", color: "#007bff", marginBottom: "30px" }}>Dashboard Admin Panorama</h1>
+        <h1 style={{ textAlign: "center", color: "#28a745", marginBottom: "30px" }}>Dashboard Admin Panorama</h1>
 
         {/* Statistik */}
         <div style={{ display: "flex", gap: "20px", marginBottom: "30px", flexWrap: "wrap" }}>

@@ -8,28 +8,28 @@ export default function LoginPasien() {
   const [mrn, setMrn] = useState("");
   const [error, setError] = useState("");
 
-  // Handle MRN input with auto-capitalization and number-only validation
+  // Handle MRN input with number-only validation and auto-capitalization
   const handleMrnChange = (e) => {
     const value = e.target.value;
-    // Only allow numbers, max 8 characters
-    const filteredValue = value.replace(/[^0-9]/g, '').slice(0, 8);
+    // Only allow numbers, max 8 characters, auto-capitalize
+    const filteredValue = value.replace(/[^0-9]/g, '').slice(0, 8).toUpperCase();
     setMrn(filteredValue);
   };
 
   async function handleLogin() {
     // Client-side validation
     if (!mrn) {
-      setError("MRN wajib diisi");
+      setError("Nomor Rekam Medis wajib diisi");
       return;
     }
 
     if (mrn.length > 8) {
-      setError("MRN maksimal 8 huruf");
+      setError("Nomor Rekam Medis maksimal 8 karakter");
       return;
     }
 
-    if (!/^[A-Za-z]+$/.test(mrn)) {
-      setError("MRN harus huruf saja");
+    if (!/^[0-9]+$/.test(mrn)) {
+      setError("Nomor Rekam Medis hanya boleh berisi angka");
       return;
     }
 

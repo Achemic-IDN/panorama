@@ -15,12 +15,13 @@
 - [x] Run prisma generate and migrate
 
 ## Testing
-- [x] Test MRN validation, auto-capitalization, error display - Code review passed
+- [x] Test MRN validation, auto-capitalization, error display - UPDATED: Now accepts numbers only (max 8 chars, required)
 - [x] Test data saving to database - PASSED: Patient login API saves data correctly
 - [x] Test admin dashboard updates with patient logins - PASSED: Admin dashboard displays patient logins
 - [x] Test add new patient login without duplicate No urut - PASSED: API prevents duplicates
 - [x] Test delete all patient logins function - PASSED: Delete all function works
 - [x] Test dashboard history loading - FIXED: Updated dashboard to load from patient-login API
+- [x] Test updated MRN validation (numbers only) - PASSED: API accepts numeric MRN correctly
 
 ## Known Issues
 - [x] CRITICAL: PatientLogin table not created in database despite schema updates - RESOLVED: Switched to JSON file storage

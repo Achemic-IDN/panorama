@@ -23,24 +23,24 @@ export async function POST(request) {
 
   // Patient login validation
   if (role === "patient") {
-    // Validate MRN: only letters, up to 8 characters, required
+    // Validate MRN: only numbers, up to 8 characters, required
     if (!mrn) {
       return NextResponse.json(
-        { success: false, message: "MRN wajib diisi" },
+        { success: false, message: "Nomor Rekam Medis wajib diisi" },
         { status: 400 }
       );
     }
 
     if (mrn.length > 8) {
       return NextResponse.json(
-        { success: false, message: "MRN maksimal 8 huruf" },
+        { success: false, message: "Nomor Rekam Medis maksimal 8 karakter" },
         { status: 400 }
       );
     }
 
-    if (!/^[A-Za-z]+$/.test(mrn)) {
+    if (!/^[0-9]+$/.test(mrn)) {
       return NextResponse.json(
-        { success: false, message: "MRN harus huruf saja" },
+        { success: false, message: "Nomor Rekam Medis hanya boleh berisi angka" },
         { status: 400 }
       );
     }

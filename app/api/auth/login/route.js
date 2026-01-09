@@ -60,7 +60,7 @@ export async function POST(request) {
         nomorRekamMedis: mrn.toUpperCase()
       };
 
-      const apiResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/admin/patient-login`, {
+      const apiResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3001'}/api/admin/patient-login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

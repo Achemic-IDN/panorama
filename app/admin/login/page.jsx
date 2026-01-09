@@ -84,7 +84,7 @@ export default function LoginAdmin() {
           style={{
             width: "100%",
             padding: "12px",
-            background: "linear-gradient(135deg, #28a745 0%, #20c997 100%)",
+            background: "linear-gradient(135deg, #007bff 0%, #1e3a8a 100%)",
             color: "white",
             border: "none",
             borderRadius: "5px",

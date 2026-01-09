@@ -54,34 +54,33 @@ export async function POST(request) {
     }
 
     try {
-      // Save patient data to JSON file via API call
-      const patientData = {
-        nomorAntrean: queue,
-        nomorRekamMedis: mrn.toUpperCase()
-      };
-
-      const apiResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3001'}/api/admin/patient-login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(patientData),
-      });
-
-      if (!apiResponse.ok) {
-        const errorData = await apiResponse.json();
+      // Check for duplicate queue number
+      const patients = readPatientsData();
+      const existingPatient = patients.find(p => p.nomorAntrean === queue);
+      if (existingPatient) {
         return NextResponse.json(
-          { success: false, message: errorData.error || "Gagal menyimpan data pasien" },
-          { status: 500 }
+          { success: false, message: "Nomor antrean sudah digunakan" },
+          { status: 400 }
         );
       }
 
-      const savedPatient = await apiResponse.json();
-      console.log("Pasien login tersimpan:", savedPatient);
+      // Create new patient record
+      const newPatient = {
+        id: patients.length > 0 ? Math.max(...patients.map(p => p.id)) + 1 : 1,
+        nomorAntrean: queue,
+        nomorRekamMedis: mrn.toUpperCase(),
+        waktuLogin: new Date().toISOString(),
+        statusAntrean: "Waiting"
+      };
+
+      patients.push(newPatient);
+      writePatientsData(patients);
+
+      console.log("Pasien login tersimpan:", newPatient);
 
       const res = NextResponse.json({
         success: true,
-        patientData: savedPatient
+        patientData: newPatient
       });
 
       res.cookies.set("auth", "patient", {
@@ -92,7 +91,7 @@ export async function POST(request) {
       });
 
       // Store patient data in cookie for dashboard display
-      res.cookies.set("patientData", JSON.stringify(savedPatient), {
+      res.cookies.set("patientData", JSON.stringify(newPatient), {
         httpOnly: false, // Allow client-side access
         secure: true,
         sameSite: 'lax',

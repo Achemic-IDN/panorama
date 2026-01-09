@@ -4,10 +4,15 @@ import path from "path";
 
 const patientsFilePath = path.join(process.cwd(), "data", "patients.json");
 
+// For Vercel compatibility, use /tmp directory if data directory is not writable
+const isVercel = process.env.VERCEL === '1';
+const vercelPatientsFilePath = path.join('/tmp', 'patients.json');
+const finalPatientsFilePath = isVercel ? vercelPatientsFilePath : patientsFilePath;
+
 // Helper function to read patients data
 function readPatientsData() {
   try {
-    const data = fs.readFileSync(patientsFilePath, "utf8");
+    const data = fs.readFileSync(finalPatientsFilePath, "utf8");
     return JSON.parse(data);
   } catch (error) {
     console.error("Error reading patients data:", error);
@@ -18,7 +23,7 @@ function readPatientsData() {
 // Helper function to write patients data
 function writePatientsData(data) {
   try {
-    fs.writeFileSync(patientsFilePath, JSON.stringify(data, null, 2));
+    fs.writeFileSync(finalPatientsFilePath, JSON.stringify(data, null, 2));
   } catch (error) {
     console.error("Error writing patients data:", error);
   }

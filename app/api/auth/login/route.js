@@ -1,7 +1,49 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import fs from "fs";
+import path from "path";
 
 export const dynamic = 'force-dynamic';
+
+// Patient data storage configuration
+const patientsFilePath = path.join(process.cwd(), "data", "patients.json");
+const isVercel = process.env.VERCEL === '1';
+const vercelPatientsFilePath = path.join('/tmp', 'patients.json');
+const finalPatientsFilePath = isVercel ? vercelPatientsFilePath : patientsFilePath;
+
+// In-memory storage as fallback for Vercel (persists during function execution)
+let inMemoryPatients = [];
+
+// Helper function to read patients data with multiple fallbacks
+function readPatientsData() {
+  // Try file storage first
+  try {
+    const data = fs.readFileSync(finalPatientsFilePath, "utf8");
+    const parsedData = JSON.parse(data);
+    // Sync in-memory storage with file data
+    inMemoryPatients = parsedData;
+    return parsedData;
+  } catch (fileError) {
+    console.log("File storage not available, using in-memory storage");
+    // Fallback to in-memory storage
+    return inMemoryPatients;
+  }
+}
+
+// Helper function to write patients data with multiple strategies
+function writePatientsData(data) {
+  // Update in-memory storage first (always works)
+  inMemoryPatients = data;
+
+  // Try to write to file as backup
+  try {
+    fs.writeFileSync(finalPatientsFilePath, JSON.stringify(data, null, 2));
+    console.log("Data saved to file storage");
+  } catch (fileError) {
+    console.log("File storage failed, data stored in memory only");
+    // Data is still stored in memory, which works for the current session
+  }
+}
 
 export async function POST(request) {
   const body = await request.json();

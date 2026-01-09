@@ -9,29 +9,63 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [history, setHistory] = useState([]);
+  const [patientData, setPatientData] = useState(null);
 
   useEffect(() => {
-    async function loadHistory() {
+    // Load patient data from cookie
+    const getCookie = (name) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+    };
+
+    const patientDataCookie = getCookie('patientData');
+    if (patientDataCookie) {
       try {
-        const res = await fetch("/api/queue?mrn=999999");
-        if (!res.ok) {
-          console.error("Failed to fetch history");
-          return;
+        const parsedData = JSON.parse(decodeURIComponent(patientDataCookie));
+        setPatientData(parsedData);
+        console.log("Patient data loaded:", parsedData);
+
+        // Load patient login history using MRN
+        async function loadHistory() {
+          try {
+            const res = await fetch(`/api/admin/patient-login?mrn=${parsedData.nomorRekamMedis}`);
+            if (!res.ok) {
+              console.error("Failed to fetch patient login history");
+              return;
+            }
+            const data = await res.json();
+            if (Array.isArray(data)) {
+              // Transform patient login data to match expected format
+              const transformedHistory = data.map(login => ({
+                id: login.id,
+                queue: login.nomorAntrean,
+                status: login.statusAntrean,
+                createdAt: login.waktuLogin
+              }));
+              setHistory(transformedHistory);
+            } else {
+              console.error("Invalid history data:", data);
+            }
+          } catch (err) {
+            console.error("Error loading patient login history:", err);
+          }
         }
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          setHistory(data);
-        } else {
-          console.error("Invalid history data:", data);
-        }
-      } catch (err) {
-        console.error("Error loading history:", err);
+        loadHistory();
+      } catch (error) {
+        console.error("Error parsing patient data:", error);
       }
+    } else {
+      console.error("No patient data found in cookie");
     }
-    loadHistory();
   }, []);
 
   async function submitFeedback() {
+    if (!patientData) {
+      setError("Patient data not available");
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -39,8 +73,8 @@ export default function DashboardPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          queue: "ABC123",
-          mrn: "999999",
+          queue: patientData.nomorAntrean,
+          mrn: patientData.nomorRekamMedis,
           message,
           rating,
         }),
@@ -84,9 +118,9 @@ export default function DashboardPage() {
               borderRadius: "8px",
               boxShadow: "0 2px 10px rgba(0,0,0,0.1)"
             }}>
-              <p><strong>Nomor Antrean:</strong> ABC123</p>
-              <p><strong>Nomor MRN:</strong> 999999</p>
-              <p><strong>Status:</strong> Menunggu</p>
+              <p><strong>Nomor Antrean:</strong> {patientData ? patientData.nomorAntrean : "Loading..."}</p>
+              <p><strong>Nomor MRN:</strong> {patientData ? patientData.nomorRekamMedis : "Loading..."}</p>
+              <p><strong>Status:</strong> {patientData ? patientData.statusAntrean : "Loading..."}</p>
             </div>
           </div>
 

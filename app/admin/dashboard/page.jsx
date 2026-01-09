@@ -7,6 +7,7 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [feedbacks, setFeedbacks] = useState([]);
   const [queues, setQueues] = useState([]);
+  const [patientLogins, setPatientLogins] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -19,12 +20,14 @@ export default function AdminDashboard() {
           router.push("/admin/login");
           return;
         }
-        // Load feedbacks and queues
+        // Load feedbacks, queues, and patient logins
         const feedbackRes = await fetch("/api/admin/feedback");
         const queueRes = await fetch("/api/admin/queue");
+        const patientLoginRes = await fetch("/api/admin/patient-login");
 
         let feedbackData = [];
         let queueData = [];
+        let patientLoginData = [];
 
         if (feedbackRes.ok) {
           const data = await feedbackRes.json();
@@ -40,8 +43,16 @@ export default function AdminDashboard() {
           console.error("Failed to fetch queues");
         }
 
+        if (patientLoginRes.ok) {
+          const data = await patientLoginRes.json();
+          patientLoginData = Array.isArray(data) ? data : [];
+        } else {
+          console.error("Failed to fetch patient logins");
+        }
+
         setFeedbacks(feedbackData);
         setQueues(queueData);
+        setPatientLogins(patientLoginData);
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -69,6 +80,8 @@ export default function AdminDashboard() {
 
   const [newQueue, setNewQueue] = useState("");
   const [newMrn, setNewMrn] = useState("");
+  const [newPatientQueue, setNewPatientQueue] = useState("");
+  const [newPatientMrn, setNewPatientMrn] = useState("");
 
   // Calculate stats from queues
   const stats = {
@@ -94,6 +107,44 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error("Error creating queue:", error);
+    }
+  };
+
+  const createPatientLogin = async () => {
+    if (!newPatientQueue || !newPatientMrn) return;
+    // Validate MRN
+    if (!/^[A-Z]{1,8}$/.test(newPatientMrn)) {
+      alert("MRN harus berisi huruf saja, maksimal 8 karakter");
+      return;
+    }
+    try {
+      const res = await fetch("/api/admin/patient-login", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ queue: newPatientQueue, mrn: newPatientMrn }),
+      });
+      if (res.ok) {
+        const pl = await res.json();
+        setPatientLogins([...patientLogins, pl]);
+        setNewPatientQueue("");
+        setNewPatientMrn("");
+      }
+    } catch (error) {
+      console.error("Error creating patient login:", error);
+    }
+  };
+
+  const deleteAllPatientLogins = async () => {
+    if (!confirm("Apakah Anda yakin ingin menghapus semua data login pasien?")) return;
+    try {
+      const res = await fetch("/api/admin/patient-login", {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        setPatientLogins([]);
+      }
+    } catch (error) {
+      console.error("Error deleting patient logins:", error);
     }
   };
 

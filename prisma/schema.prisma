@@ -27,3 +27,10 @@ model Feedback {
   rating  Int      @default(5)
   time    DateTime @default(now())
 }
+
+model PatientLogin {
+  id        Int      @id @default(autoincrement())
+  queue     String
+  mrn       String
+  loginTime DateTime @default(now())
+}

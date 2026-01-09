@@ -8,7 +8,36 @@ export default function LoginPasien() {
   const [mrn, setMrn] = useState("");
   const [error, setError] = useState("");
 
+  // Handle MRN input with auto-capitalization and number-only validation
+  const handleMrnChange = (e) => {
+    const value = e.target.value;
+    // Only allow numbers, max 8 characters
+    const filteredValue = value.replace(/[^0-9]/g, '').slice(0, 8);
+    setMrn(filteredValue);
+  };
+
   async function handleLogin() {
+    // Client-side validation
+    if (!mrn) {
+      setError("MRN wajib diisi");
+      return;
+    }
+
+    if (mrn.length > 8) {
+      setError("MRN maksimal 8 huruf");
+      return;
+    }
+
+    if (!/^[A-Za-z]+$/.test(mrn)) {
+      setError("MRN harus huruf saja");
+      return;
+    }
+
+    if (!queue) {
+      setError("Nomor antrean wajib diisi");
+      return;
+    }
+
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -22,7 +51,8 @@ export default function LoginPasien() {
     if (res.ok) {
       router.push("/dashboard");
     } else {
-      setError("Login gagal. Periksa nomor antrean & MRN.");
+      const data = await res.json();
+      setError(data.message || "Login gagal. Periksa nomor antrean & MRN.");
     }
   }
 

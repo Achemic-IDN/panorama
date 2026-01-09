@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = 'force-dynamic';
 
@@ -6,7 +7,7 @@ export async function POST(request) {
   const body = await request.json();
   const { username, password, role, queue, mrn } = body;
 
-  // contoh hardcode (sementara)
+  // Admin login
   if (role === "admin" && username === "admin" && password === "panorama") {
     const res = NextResponse.json({ success: true });
 
@@ -20,17 +21,93 @@ export async function POST(request) {
     return res;
   }
 
-  if (role === "patient" && queue === "ABC123" && mrn === "999999") {
-    const res = NextResponse.json({ success: true });
+  // Patient login validation
+  if (role === "patient") {
+    // Validate MRN: only letters, up to 8 characters, required
+    if (!mrn) {
+      return NextResponse.json(
+        { success: false, message: "MRN wajib diisi" },
+        { status: 400 }
+      );
+    }
 
-    res.cookies.set("auth", "patient", {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'lax',
-      path: "/",
-    });
+    if (mrn.length > 8) {
+      return NextResponse.json(
+        { success: false, message: "MRN maksimal 8 huruf" },
+        { status: 400 }
+      );
+    }
 
-    return res;
+    if (!/^[A-Za-z]+$/.test(mrn)) {
+      return NextResponse.json(
+        { success: false, message: "MRN harus huruf saja" },
+        { status: 400 }
+      );
+    }
+
+    // Allow any queue number, no validation needed
+    if (!queue) {
+      return NextResponse.json(
+        { success: false, message: "Nomor antrean wajib diisi" },
+        { status: 400 }
+      );
+    }
+
+    try {
+      // Save patient data to JSON file via API call
+      const patientData = {
+        nomorAntrean: queue,
+        nomorRekamMedis: mrn.toUpperCase()
+      };
+
+      const apiResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/admin/patient-login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(patientData),
+      });
+
+      if (!apiResponse.ok) {
+        const errorData = await apiResponse.json();
+        return NextResponse.json(
+          { success: false, message: errorData.error || "Gagal menyimpan data pasien" },
+          { status: 500 }
+        );
+      }
+
+      const savedPatient = await apiResponse.json();
+      console.log("Pasien login tersimpan:", savedPatient);
+
+      const res = NextResponse.json({
+        success: true,
+        patientData: savedPatient
+      });
+
+      res.cookies.set("auth", "patient", {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax',
+        path: "/",
+      });
+
+      // Store patient data in cookie for dashboard display
+      res.cookies.set("patientData", JSON.stringify(savedPatient), {
+        httpOnly: false, // Allow client-side access
+        secure: true,
+        sameSite: 'lax',
+        path: "/",
+        maxAge: 60 * 60 * 24, // 24 hours
+      });
+
+      return res;
+    } catch (error) {
+      console.error("Error saving patient login:", error);
+      return NextResponse.json(
+        { success: false, message: "Gagal menyimpan data login" },
+        { status: 500 }
+      );
+    }
   }
 
   return NextResponse.json(

@@ -1,0 +1,51 @@
+[
+  {
+    "id": 1,
+    "nomorAntrean": "ABC001",
+    "nomorRekamMedis": "PANORAMA",
+    "waktuLogin": "2024-01-15T10:30:00.000Z",
+    "statusAntrean": "Waiting"
+  },
+  {
+    "id": 2,
+    "nomorAntrean": "ABC002",
+    "nomorRekamMedis": "TESTING",
+    "waktuLogin": "2024-01-15T11:15:00.000Z",
+    "statusAntrean": "Waiting"
+  },
+  {
+    "id": 3,
+    "nomorAntrean": "ABC003",
+    "nomorRekamMedis": "SAMPLE",
+    "waktuLogin": "2024-01-15T12:00:00.000Z",
+    "statusAntrean": "Waiting"
+  },
+  {
+    "id": 4,
+    "nomorAntrean": "ABC004",
+    "nomorRekamMedis": "DEMO",
+    "waktuLogin": "2024-01-15T13:45:00.000Z",
+    "statusAntrean": "Waiting"
+  },
+  {
+    "id": 5,
+    "nomorAntrean": "ABC005",
+    "nomorRekamMedis": "EXAMPLE",
+    "waktuLogin": "2024-01-15T14:20:00.000Z",
+    "statusAntrean": "Waiting"
+  },
+  {
+    "id": 6,
+    "nomorAntrean": "TEST123",
+    "nomorRekamMedis": "PANORAMA",
+    "waktuLogin": "2026-01-09T04:11:43.815Z",
+    "statusAntrean": "Waiting"
+  },
+  {
+    "id": 7,
+    "nomorAntrean": "TEST001",
+    "nomorRekamMedis": "PANORAMA",
+    "waktuLogin": "2026-01-09T04:13:45.902Z",
+    "statusAntrean": "Waiting"
+  }
+]

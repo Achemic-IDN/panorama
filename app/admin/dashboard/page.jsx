@@ -267,6 +267,38 @@ export default function AdminDashboard() {
           </tbody>
         </table>
 
+        {/* Tabel Riwayat Login Pasien */}
+        <h2 style={{ marginBottom: "20px" }}>Riwayat Login Pasien</h2>
+        <table style={{
+          width: "100%",
+          borderCollapse: "collapse",
+          marginBottom: "40px",
+          boxShadow: "0 5px 15px rgba(0,0,0,0.1)",
+          borderRadius: "5px",
+          overflow: "hidden"
+        }}>
+          <thead style={{ background: "#f8f9fa" }}>
+            <tr>
+              <th style={{ padding: "12px", border: "1px solid #ddd", textAlign: "left" }}>ID</th>
+              <th style={{ padding: "12px", border: "1px solid #ddd", textAlign: "left" }}>Antrean</th>
+              <th style={{ padding: "12px", border: "1px solid #ddd", textAlign: "left" }}>MRN</th>
+              <th style={{ padding: "12px", border: "1px solid #ddd", textAlign: "left" }}>Status</th>
+              <th style={{ padding: "12px", border: "1px solid #ddd", textAlign: "left" }}>Waktu Login</th>
+            </tr>
+          </thead>
+          <tbody>
+            {patientLogins.map((login, i) => (
+              <tr key={login.id} style={{ background: i % 2 === 0 ? "#fff" : "#f8f9fa" }}>
+                <td style={{ padding: "12px", border: "1px solid #ddd" }}>{login.id}</td>
+                <td style={{ padding: "12px", border: "1px solid #ddd" }}>{login.nomorAntrean}</td>
+                <td style={{ padding: "12px", border: "1px solid #ddd" }}>{login.nomorRekamMedis}</td>
+                <td style={{ padding: "12px", border: "1px solid #ddd" }}>{login.statusAntrean}</td>
+                <td style={{ padding: "12px", border: "1px solid #ddd" }}>{new Date(login.waktuLogin).toLocaleString()}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
         {/* Tabel Feedback */}
         <h2 style={{ marginBottom: "20px" }}>Feedback Pasien</h2>
         <table style={{

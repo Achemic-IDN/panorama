@@ -200,34 +200,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Riwayat Antrean */}
-        <div style={{ marginTop: "40px" }}>
-          <h3 style={{ color: "#555", marginBottom: "20px" }}>Riwayat Antrean</h3>
-          <table style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-            borderRadius: "5px",
-            overflow: "hidden"
-          }}>
-            <thead style={{ background: "#f8f9fa" }}>
-              <tr>
-                <th style={{ padding: "10px", border: "1px solid #ddd", textAlign: "left" }}>Antrean</th>
-                <th style={{ padding: "10px", border: "1px solid #ddd", textAlign: "left" }}>Status</th>
-                <th style={{ padding: "10px", border: "1px solid #ddd", textAlign: "left" }}>Waktu</th>
-              </tr>
-            </thead>
-            <tbody>
-              {history.map((h, i) => (
-                <tr key={h.id} style={{ background: i % 2 === 0 ? "#fff" : "#f8f9fa" }}>
-                  <td style={{ padding: "10px", border: "1px solid #ddd" }}>{h.queue}</td>
-                  <td style={{ padding: "10px", border: "1px solid #ddd" }}>{h.status}</td>
-                  <td style={{ padding: "10px", border: "1px solid #ddd" }}>{new Date(h.createdAt || Date.now()).toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+
       </main>
     </div>
   );

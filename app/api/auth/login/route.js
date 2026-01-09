@@ -96,7 +96,7 @@ export async function POST(request) {
     }
 
     try {
-      // Check for duplicate queue number
+      // Check for duplicate queue number in both patient logins and queues
       const patients = readPatientsData();
       const existingPatient = patients.find(p => p.nomorAntrean === queue);
       if (existingPatient) {
@@ -106,7 +106,18 @@ export async function POST(request) {
         );
       }
 
-      // Create new patient record
+      // Check for duplicate queue number in database queues
+      const existingQueue = await prisma.queue.findUnique({
+        where: { queue: queue }
+      });
+      if (existingQueue) {
+        return NextResponse.json(
+          { success: false, message: "Nomor antrean sudah digunakan" },
+          { status: 400 }
+        );
+      }
+
+      // Create new patient record for patient-login API
       const newPatient = {
         id: patients.length > 0 ? Math.max(...patients.map(p => p.id)) + 1 : 1,
         nomorAntrean: queue,
@@ -118,7 +129,16 @@ export async function POST(request) {
       patients.push(newPatient);
       writePatientsData(patients);
 
+      // Also create a queue entry in the database for admin dashboard
+      const newQueue = await prisma.queue.create({
+        data: {
+          queue: queue,
+          mrn: mrn.toUpperCase()
+        },
+      });
+
       console.log("Pasien login tersimpan:", newPatient);
+      console.log("Antrean dibuat:", newQueue);
 
       const res = NextResponse.json({
         success: true,

@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 
 export function middleware(req) {
-  const cookieStore = cookies();
-  const auth = cookieStore.get("auth")?.value;
+  const auth = req.cookies.get("auth")?.value;
+  const staffId = req.cookies.get("staff_id")?.value;
   const path = req.nextUrl.pathname;
 
   // ADMIN
@@ -20,9 +19,26 @@ export function middleware(req) {
     }
   }
 
+  // STAFF pages
+  if (path.startsWith("/staff")) {
+    if (!staffId && !path.startsWith("/staff/login")) {
+      return NextResponse.redirect(new URL("/staff/login", req.url));
+    }
+  }
+
+  // STAFF APIs
+  if (path.startsWith("/api/staff")) {
+    if (path === "/api/staff/login") {
+      return NextResponse.next();
+    }
+    if (!staffId) {
+      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+    }
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/dashboard", "/admin/dashboard"],
+  matcher: ["/dashboard", "/admin/dashboard", "/staff/:path*", "/api/staff/:path*"],
 };

@@ -28,11 +28,24 @@ enum QueueStatus {
   CANCELLED
 }
 
+enum StaffRole {
+  ENTRY
+  TRANSPORT
+  PACKAGING
+  PICKUP
+  ADMIN
+}
+
 model Queue {
   id        Int         @id @default(autoincrement())
   queue     String      @unique
   mrn       String
   status    QueueStatus @default(WAITING)
+  entryAt   DateTime?
+  transportAt DateTime?
+  packagingAt DateTime?
+  readyAt   DateTime?
+  completedAt DateTime?
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 }
@@ -70,6 +83,18 @@ model QueueLog {
   @@map("queue_logs")
 }
 
+// Log setiap perpindahan stage antrean
+model QueueStageLog {
+  id        Int         @id @default(autoincrement())
+  queueId   Int
+  stage     QueueStatus
+  staffId   Int?        @map("staff_id")
+  notes     String?
+  timestamp DateTime    @default(now())
+
+  @@map("queue_stage_logs")
+}
+
 model Patient {
   id           Int      @id @default(autoincrement())
   mrn          String   @unique
@@ -81,11 +106,12 @@ model Patient {
 }
 
 model Staff {
-  id           Int     @id @default(autoincrement())
+  id           Int       @id @default(autoincrement())
   name         String
-  role         String  // ENTRY | TRANSPORT | PACKAGING | ADMIN
-  username     String  @unique
-  passwordHash String  @map("password_hash")
+  role         StaffRole
+  username     String    @unique
+  passwordHash String    @map("password_hash")
+  createdAt    DateTime  @default(now()) @map("created_at")
 
   @@map("staff")
 }

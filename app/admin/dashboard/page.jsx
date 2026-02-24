@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { WORKFLOW_ORDER, NEXT_STATUS, getStatusLabel, isInProgressStatus } from "@/lib/status";
+import { getStatusLabel, isInProgressStatus } from "@/lib/status";
+import { getNextStage } from "@/lib/workflowConfig";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -99,9 +100,7 @@ export default function AdminDashboard() {
   const stats = {
     total: queues.length,
     waiting: queues.filter(q => q.status === "WAITING").length,
-    inProgress: queues.filter(q =>
-      ["ENTRY", "TRANSPORT", "PACKAGING", "READY"].includes(q.status)
-    ).length,
+    inProgress: queues.filter(q => isInProgressStatus(q.status)).length,
     completed: queues.filter(q => q.status === "COMPLETED").length,
   };
 
@@ -218,6 +217,21 @@ export default function AdminDashboard() {
             >
               Lihat Daftar Feedback
             </button>
+            <button
+              type="button"
+              onClick={() => router.push("/admin/staff")}
+              style={{
+                padding: "8px 14px",
+                background: "linear-gradient(135deg, #6c757d 0%, #343a40 100%)",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "14px"
+              }}
+            >
+              Kelola Staff
+            </button>
           </div>
         </div>
 
@@ -303,57 +317,49 @@ export default function AdminDashboard() {
                     Tahap saat ini: <strong>{getStatusLabel(q.status)}</strong>
                   </div>
                   <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center", marginBottom: "6px" }}>
-                    {WORKFLOW_ORDER.map((statusCode, index) => {
-                      const label = getStatusLabel(statusCode);
-                      const isActive = q.status === statusCode;
-                      const nextStatus = NEXT_STATUS[q.status] || null;
-                      const isNext = statusCode === nextStatus;
+                    {(() => {
+                      const nextStage = getNextStage(q.status);
+                      const isTerminal = q.status === "COMPLETED" || q.status === "CANCELLED";
                       const isLoading =
-                        updatingQueueId === q.id && updatingStatus === statusCode;
+                        updatingQueueId === q.id && updatingStatus === nextStage;
 
-                      let background = "#f8f9fa";
-                      let color = "#343a40";
-
-                      if (statusCode === "WAITING") {
-                        background = "#fff3cd";
-                        color = "#856404";
-                      } else if (["ENTRY", "TRANSPORT", "PACKAGING", "READY"].includes(statusCode)) {
-                        background = "#cce5ff";
-                        color = "#004085";
-                      } else if (statusCode === "COMPLETED") {
-                        background = "#d4edda";
-                        color = "#155724";
+                      if (!nextStage || isTerminal) {
+                        return null;
                       }
 
-                      const disabled =
-                        !isNext || isLoading || q.status === "COMPLETED" || q.status === "CANCELLED";
+                      let background = "#cce5ff";
+                      let color = "#004085";
+
+                      if (nextStage === "COMPLETED") {
+                        background = "#d4edda";
+                        color = "#155724";
+                      } else if (nextStage === "WAITING") {
+                        background = "#fff3cd";
+                        color = "#856404";
+                      }
 
                       return (
                         <button
-                          key={statusCode}
                           type="button"
-                          onClick={() => {
-                            if (!disabled) {
-                              updateQueueStatus(q.id, statusCode);
-                            }
-                          }}
-                          disabled={disabled}
+                          onClick={() => updateQueueStatus(q.id, nextStage)}
+                          disabled={isLoading}
                           style={{
-                            padding: "4px 8px",
+                            padding: "4px 10px",
                             borderRadius: "4px",
-                            border: isActive ? "2px solid #343a40" : "1px solid #ced4da",
+                            border: "1px solid #ced4da",
                             background,
                             color,
-                            cursor: disabled ? "not-allowed" : "pointer",
+                            cursor: isLoading ? "not-allowed" : "pointer",
                             fontSize: "11px",
-                            minWidth: "80px",
-                            opacity: isNext || isActive ? 1 : 0.5,
+                            minWidth: "110px",
                           }}
                         >
-                          {isLoading ? "Mengubah..." : label}
+                          {isLoading
+                            ? "Mengubah..."
+                            : `Lanjut ke ${getStatusLabel(nextStage)}`}
                         </button>
                       );
-                    })}
+                    })()}
                     {/* Tombol batalkan */}
                     <button
                       type="button"

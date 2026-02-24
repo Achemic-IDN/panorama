@@ -112,9 +112,9 @@ export default function AdminDashboard() {
 
   const createPatientLogin = async () => {
     if (!newPatientQueue || !newPatientMrn) return;
-    // Validate MRN
-    if (!/^[A-Z]{1,8}$/.test(newPatientMrn)) {
-      alert("MRN harus berisi huruf saja, maksimal 8 karakter");
+    // Validate MRN - only numbers, max 8 characters
+    if (!/^[0-9]+$/.test(newPatientMrn) || newPatientMrn.length > 8) {
+      alert("MRN harus berisi angka saja, maksimal 8 karakter");
       return;
     }
     try {

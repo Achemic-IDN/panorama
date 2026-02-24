@@ -12,6 +12,12 @@ const finalPatientsFilePath = isVercel ? vercelPatientsFilePath : patientsFilePa
 // In-memory storage as fallback for Vercel (persists during function execution)
 let inMemoryPatients = [];
 
+// Verify admin authentication
+async function verifyAuth(request) {
+  const auth = request.cookies.get('auth');
+  return auth?.value === 'admin';
+}
+
 // Helper function to read patients data with multiple fallbacks
 function readPatientsData() {
   // Try file storage first
@@ -43,8 +49,13 @@ function writePatientsData(data) {
   }
 }
 
-export async function GET() {
+export async function GET(request) {
   try {
+    const isAdmin = await verifyAuth(request);
+    if (!isAdmin) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const patients = readPatientsData();
     return NextResponse.json(patients);
   } catch (error) {
@@ -55,13 +66,26 @@ export async function GET() {
 
 export async function POST(request) {
   try {
+    const isAdmin = await verifyAuth(request);
+    if (!isAdmin) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
-    const { nomorAntrean, nomorRekamMedis } = body;
+    const { queue: nomorAntrean, mrn: nomorRekamMedis } = body;
 
     // Validate required fields
     if (!nomorAntrean || !nomorRekamMedis) {
       return NextResponse.json(
-        { error: "Nomor antrean dan MRN wajib diisi" },
+        { error: "Queue and MRN are required" },
+        { status: 400 }
+      );
+    }
+
+    // Validate MRN format (numbers only, max 8 chars)
+    if (!/^[0-9]+$/.test(nomorRekamMedis) || nomorRekamMedis.length > 8) {
+      return NextResponse.json(
+        { error: "MRN must be numeric and max 8 characters" },
         { status: 400 }
       );
     }
@@ -71,8 +95,8 @@ export async function POST(request) {
     const existingPatient = patients.find(p => p.nomorAntrean === nomorAntrean);
     if (existingPatient) {
       return NextResponse.json(
-        { error: "Nomor antrean sudah digunakan" },
-        { status: 400 }
+        { error: "Queue number already exists" },
+        { status: 409 }
       );
     }
 
@@ -80,7 +104,7 @@ export async function POST(request) {
     const newPatient = {
       id: patients.length > 0 ? Math.max(...patients.map(p => p.id)) + 1 : 1,
       nomorAntrean,
-      nomorRekamMedis: nomorRekamMedis.toUpperCase(),
+      nomorRekamMedis,
       waktuLogin: new Date().toISOString(),
       statusAntrean: "Waiting"
     };
@@ -97,12 +121,17 @@ export async function POST(request) {
   }
 }
 
-export async function DELETE() {
+export async function DELETE(request) {
   try {
+    const isAdmin = await verifyAuth(request);
+    if (!isAdmin) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     // Clear all patient data
     writePatientsData([]);
     console.log("Semua data pasien telah dihapus");
-    return NextResponse.json({ message: "All patients deleted successfully" });
+    return NextResponse.json({ message: "All patients deleted successfully" }, { status: 200 });
   } catch (error) {
     console.error("Error deleting patients:", error);
     return NextResponse.json({ error: "Failed to delete patients" }, { status: 500 });

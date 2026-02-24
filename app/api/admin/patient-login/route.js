@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getQueueByPatient } from "@/lib/queueService";
 
 // Verify admin authentication
 async function verifyAuth(request) {
@@ -76,6 +77,18 @@ export async function POST(request) {
         { error: "Queue number already exists for this MRN" },
         { status: 409 }
       );
+    }
+
+    // Optional but ideal: cek apakah antrean dengan kombinasi queue+mrn sudah ada di tabel Queue
+    try {
+      const matchedQueue = await getQueueByPatient(queue, mrn);
+      if (!matchedQueue) {
+        console.warn(
+          "No matching Queue found for PatientLogin. Creating login with default status 'Waiting'."
+        );
+      }
+    } catch (lookupError) {
+      console.error("Failed to validate Queue for PatientLogin (continuing):", lookupError);
     }
 
     const created = await prisma.patientLogin.create({

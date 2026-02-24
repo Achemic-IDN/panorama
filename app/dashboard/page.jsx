@@ -10,6 +10,9 @@ export default function DashboardPage() {
   const [error, setError] = useState(null);
   const [history, setHistory] = useState([]);
   const [patientData, setPatientData] = useState(null);
+  const [statusError, setStatusError] = useState(null);
+  const [lastStatus, setLastStatus] = useState(null);
+  const [statusChangeMessage, setStatusChangeMessage] = useState("");
 
   useEffect(() => {
     // Load patient data from cookie
@@ -60,6 +63,83 @@ export default function DashboardPage() {
     }
   }, []);
 
+  // Polling status antrean real-time setiap beberapa detik
+  useEffect(() => {
+    if (!patientData?.nomorAntrean || !patientData?.nomorRekamMedis) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const fetchStatus = async () => {
+      try {
+        const res = await fetch(
+          `/api/queue/status?queue=${encodeURIComponent(
+            patientData.nomorAntrean
+          )}&mrn=${encodeURIComponent(patientData.nomorRekamMedis)}`
+        );
+
+        if (!res.ok) {
+          // Jika antrean tidak ditemukan, jangan spamming error ke user
+          if (res.status !== 404) {
+            console.error("Failed to fetch queue status");
+            setStatusError("Gagal mengambil status antrean");
+          }
+          return;
+        }
+
+        const json = await res.json();
+        if (!json?.success || !json?.data) {
+          return;
+        }
+
+        if (cancelled) return;
+
+        const newStatus = json.data.status;
+
+        setPatientData((prev) => {
+          const previousStatus = prev?.statusAntrean;
+
+          // Jika ada perubahan status yang nyata, tampilkan notifikasi singkat
+          if (previousStatus && previousStatus !== newStatus) {
+            setStatusChangeMessage(
+              `Status antrean Anda berubah dari "${previousStatus}" menjadi "${newStatus}".`
+            );
+            setLastStatus(newStatus);
+
+            // Auto-dismiss setelah beberapa detik
+            setTimeout(() => {
+              setStatusChangeMessage("");
+            }, 6000);
+          }
+
+          return prev
+            ? {
+                ...prev,
+                statusAntrean: newStatus,
+                updatedAt: json.data.updatedAt,
+              }
+            : prev;
+        });
+        setStatusError(null);
+      } catch (err) {
+        console.error("Error polling queue status:", err);
+        if (!cancelled) {
+          setStatusError("Gagal mengambil status antrean");
+        }
+      }
+    };
+
+    // panggil segera sekali, lalu interval
+    fetchStatus();
+    const intervalId = setInterval(fetchStatus, 4000); // 4 detik di tengah 3–5 detik
+
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+    };
+  }, [patientData?.nomorAntrean, patientData?.nomorRekamMedis]);
+
   async function submitFeedback() {
     if (!patientData) {
       setError("Patient data not available");
@@ -109,6 +189,32 @@ export default function DashboardPage() {
       }}>
         <h1 style={{ textAlign: "center", color: "#333", marginBottom: "30px" }}>Dashboard Pasien</h1>
 
+        {statusChangeMessage && (
+          <div
+            style={{
+              marginBottom: "20px",
+              padding: "12px 16px",
+              borderRadius: "6px",
+              background:
+                lastStatus === "Dipanggil"
+                  ? "#cce5ff"
+                  : lastStatus === "Selesai"
+                  ? "#d4edda"
+                  : "#fff3cd",
+              color:
+                lastStatus === "Dipanggil"
+                  ? "#004085"
+                  : lastStatus === "Selesai"
+                  ? "#155724"
+                  : "#856404",
+              border: "1px solid rgba(0,0,0,0.1)",
+              fontSize: "14px",
+            }}
+          >
+            {statusChangeMessage}
+          </div>
+        )}
+
         <div style={{ display: "flex", gap: "40px", alignItems: "flex-start" }}>
           <div style={{ flex: 1 }}>
             <h3 style={{ color: "#555", marginBottom: "20px" }}>Informasi Pasien</h3>
@@ -121,6 +227,11 @@ export default function DashboardPage() {
               <p><strong>Nomor Antrean:</strong> {patientData ? patientData.nomorAntrean : "Loading..."}</p>
               <p><strong>Nomor MRN:</strong> {patientData ? patientData.nomorRekamMedis : "Loading..."}</p>
               <p><strong>Status:</strong> {patientData ? patientData.statusAntrean : "Loading..."}</p>
+              {statusError && (
+                <p style={{ marginTop: "8px", color: "red", fontSize: "14px" }}>
+                  {statusError}
+                </p>
+              )}
             </div>
           </div>
 

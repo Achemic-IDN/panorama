@@ -10,6 +10,8 @@ export default function AdminDashboard() {
   const [patientLogins, setPatientLogins] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [updatingQueueId, setUpdatingQueueId] = useState(null);
+  const [updatingStatus, setUpdatingStatus] = useState(null);
 
   useEffect(() => {
     async function checkAuth() {
@@ -63,18 +65,27 @@ export default function AdminDashboard() {
   }, [router]);
 
   const updateQueueStatus = async (id, status) => {
+    setUpdatingQueueId(id);
+    setUpdatingStatus(status);
     try {
       const res = await fetch(`/api/admin/queue/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       });
-      if (res.ok) {
-        const updatedQueue = await res.json();
-        setQueues(queues.map(q => q.id === id ? updatedQueue : q));
+      if (!res.ok) {
+        console.error("Failed to update queue status");
+        return;
       }
+      const updatedQueue = await res.json();
+      setQueues(prevQueues =>
+        prevQueues.map(q => q.id === id ? updatedQueue : q)
+      );
     } catch (error) {
       console.error("Error updating status:", error);
+    } finally {
+      setUpdatingQueueId(null);
+      setUpdatingStatus(null);
     }
   };
 
@@ -285,15 +296,48 @@ export default function AdminDashboard() {
                 <td style={{ padding: "12px", border: "1px solid #ddd" }}>{q.queue}</td>
                 <td style={{ padding: "12px", border: "1px solid #ddd" }}>{q.mrn}</td>
                 <td style={{ padding: "12px", border: "1px solid #ddd" }}>
-                  <select
-                    value={q.status}
-                    onChange={(e) => updateQueueStatus(q.id, e.target.value)}
-                    style={{ padding: "5px", border: "1px solid #ddd", borderRadius: "4px" }}
-                  >
-                    <option value="Menunggu">Menunggu</option>
-                    <option value="Dipanggil">Dipanggil</option>
-                    <option value="Selesai">Selesai</option>
-                  </select>
+                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                    {["Menunggu", "Dipanggil", "Selesai"].map((status) => {
+                      let background = "#f8f9fa";
+                      let color = "#333";
+
+                      if (status === "Menunggu") {
+                        background = "#fff3cd";
+                        color = "#856404";
+                      } else if (status === "Dipanggil") {
+                        background = "#cce5ff";
+                        color = "#004085";
+                      } else if (status === "Selesai") {
+                        background = "#d4edda";
+                        color = "#155724";
+                      }
+
+                      const isActive = q.status === status;
+                      const isLoading =
+                        updatingQueueId === q.id && updatingStatus === status;
+
+                      return (
+                        <button
+                          key={status}
+                          type="button"
+                          onClick={() => updateQueueStatus(q.id, status)}
+                          disabled={isLoading || isActive}
+                          style={{
+                            padding: "6px 10px",
+                            borderRadius: "4px",
+                            border: isActive ? "2px solid #343a40" : "1px solid #ced4da",
+                            background,
+                            color,
+                            cursor: isLoading || isActive ? "not-allowed" : "pointer",
+                            fontSize: "12px",
+                            minWidth: "80px",
+                          }}
+                        >
+                          {isLoading ? "Mengubah..." : status}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </td>
                 <td style={{ padding: "12px", border: "1px solid #ddd" }}>{new Date(q.createdAt).toLocaleString()}</td>
               </tr>

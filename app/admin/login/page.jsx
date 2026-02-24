@@ -19,10 +19,16 @@ export default function LoginAdmin() {
       }),
     });
 
-    if (res.ok) {
-      router.push("/admin/dashboard");
-    } else {
+    const json = await res.json().catch(() => null);
+    if (!res.ok || !json?.success) {
       setError("Login admin gagal");
+      return;
+    }
+
+    if (json.data && Array.isArray(json.data.roles) && json.data.roles.length > 1) {
+      router.push("/admin/select-role");
+    } else {
+      router.push("/admin/dashboard");
     }
   }
 

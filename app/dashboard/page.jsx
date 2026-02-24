@@ -180,7 +180,7 @@ export default function DashboardPage() {
               padding: "12px 16px",
               borderRadius: "6px",
               background:
-                lastStatus === "COMPLETED"
+                lastStatus === "SELESAI"
                   ? "#d4edda"
                   : lastStatus === "CANCELLED"
                   ? "#f8d7da"
@@ -188,7 +188,7 @@ export default function DashboardPage() {
                   ? "#cce5ff"
                   : "#fff3cd",
               color:
-                lastStatus === "COMPLETED"
+                lastStatus === "SELESAI"
                   ? "#155724"
                   : lastStatus === "CANCELLED"
                   ? "#721c24"

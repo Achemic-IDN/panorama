@@ -5,10 +5,12 @@ import { broadcastQueueUpdate } from "@/lib/realtime";
 
 export const dynamic = 'force-dynamic';
 
-// Verify admin authentication
+import { requireRole } from "@/lib/roleGuard";
+
+// we no longer use simple auth cookie – staff with UTAMA role are considered admin
 async function verifyAuth(request) {
-  const auth = request.cookies.get('auth');
-  return auth?.value === 'admin';
+  const { ok, staff, activeRole, response } = await requireRole(request, "UTAMA");
+  return ok;
 }
 
 export async function GET(request) {

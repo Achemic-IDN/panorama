@@ -7,16 +7,17 @@ export const dynamic = "force-dynamic";
 function getVisibleStatusesByRole(role) {
   switch (role) {
     case "ENTRY":
-      return ["WAITING"];
+      return ["MENUNGGU"];
     case "TRANSPORT":
       return ["ENTRY"];
     case "PACKAGING":
-      // membutuhkan 2 tahap agar bisa TRANSPORT->PACKAGING->READY oleh role yang sama
+      // packaging user should be able to take over from TRANSPORT and
+      // to advance to PENYERAHAN as well (two steps in a row)
       return ["TRANSPORT", "PACKAGING"];
-    case "PICKUP":
-      return ["READY"];
-    case "ADMIN":
-      return null; // lihat semua
+    case "PENYERAHAN":
+      return ["PENYERAHAN"];
+    case "UTAMA":
+      return null; // see everything
     default:
       return [];
   }
@@ -29,7 +30,9 @@ export async function GET(request) {
       return ApiResponse.unauthorized("Unauthorized");
     }
 
-    const visibleStatuses = getVisibleStatusesByRole(staff.role);
+    // determine active role either from cookie or from staff.roles (fallback to first)
+    const activeRole = request.cookies.get("staff_role")?.value || (Array.isArray(staff.roles) ? staff.roles[0] : null);
+    const visibleStatuses = getVisibleStatusesByRole(activeRole);
 
     const queues = await prisma.queue.findMany({
       where: visibleStatuses ? { status: { in: visibleStatuses } } : undefined,
@@ -38,6 +41,7 @@ export async function GET(request) {
 
     return ApiResponse.success({
       staff,
+      activeRole,
       filters: { visibleStatuses },
       queues,
     });

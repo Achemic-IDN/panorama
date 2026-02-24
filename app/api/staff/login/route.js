@@ -28,13 +28,14 @@ export async function POST(request) {
       return ApiResponse.unauthorized("Username atau password salah");
     }
 
+    // send back roles array so frontend can show selection if needed
     const res = NextResponse.json({
       success: true,
       data: {
         id: staff.id,
         name: staff.name,
         username: staff.username,
-        role: staff.role,
+        roles: staff.roles,
       },
       timestamp: new Date().toISOString(),
     });
@@ -47,14 +48,16 @@ export async function POST(request) {
       maxAge: 60 * 60 * 12, // 12 jam
     });
 
-    // Untuk UI convenience; backend tetap akan verifikasi role dari DB
-    res.cookies.set("staff_role", String(staff.role), {
-      httpOnly: true,
-      secure: true,
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 12,
-    });
+    // if there is only one role we can set the active cookie immediately
+    if (Array.isArray(staff.roles) && staff.roles.length === 1) {
+      res.cookies.set("staff_role", staff.roles[0], {
+        httpOnly: true,
+        secure: true,
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60 * 12,
+      });
+    }
 
     return res;
   } catch (error) {

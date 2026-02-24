@@ -3,37 +3,22 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getStatusLabel } from "@/lib/status";
-
-function getRoleLabel(role) {
-  switch (role) {
-    case "ENTRY":
-      return "ENTRY (Entri Resep)";
-    case "TRANSPORT":
-      return "TRANSPORT (Pengambilan Obat)";
-    case "PACKAGING":
-      return "PACKAGING (Peracikan/Pengemasan)";
-    case "PICKUP":
-      return "PICKUP (Serah Terima)";
-    case "ADMIN":
-      return "ADMIN";
-    default:
-      return role || "-";
-  }
-}
+import { getRoleLabel } from "@/lib/staffLabels";
 
 export default function StaffDashboardPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [staff, setStaff] = useState(null);
+  const [activeRole, setActiveRole] = useState(null);
   const [queues, setQueues] = useState([]);
   const [updatingId, setUpdatingId] = useState(null);
   const [loggingOut, setLoggingOut] = useState(false);
 
   const title = useMemo(() => {
-    if (!staff?.role) return "Dashboard Staff";
-    return `Dashboard Staff - ${getRoleLabel(staff.role)}`;
-  }, [staff?.role]);
+    if (!activeRole) return "Dashboard Staff";
+    return `Dashboard Staff - ${getRoleLabel(activeRole)}`;
+  }, [activeRole]);
 
   async function loadQueues() {
     setLoading(true);
@@ -47,7 +32,14 @@ export default function StaffDashboardPage() {
         return;
       }
 
+      // if no active role assigned yet (user has multiple roles)
+      if (!json.data.activeRole) {
+        router.push("/staff/select-role");
+        return;
+      }
+
       setStaff(json.data.staff);
+      setActiveRole(json.data.activeRole);
       setQueues(Array.isArray(json.data.queues) ? json.data.queues : []);
       setLoading(false);
     } catch (e) {
@@ -188,7 +180,7 @@ export default function StaffDashboardPage() {
         {staff && (
           <div style={{ marginTop: "10px", color: "#555", fontSize: "14px" }}>
             Login sebagai <strong>{staff.name}</strong> ({staff.username}) — Role:{" "}
-            <strong>{getRoleLabel(staff.role)}</strong>
+            <strong>{getRoleLabel(activeRole)}</strong>
           </div>
         )}
 

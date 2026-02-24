@@ -10,19 +10,19 @@ export const dynamic = "force-dynamic";
 function getTargetStageForRole(role, currentStage) {
   switch (role) {
     case "ENTRY":
-      return currentStage === "WAITING" ? "ENTRY" : null;
+      return currentStage === "MENUNGGU" ? "ENTRY" : null;
     case "TRANSPORT":
       return currentStage === "ENTRY" ? "TRANSPORT" : null;
     case "PACKAGING":
-      // memungkinkan 2 step berurutan di area packaging: TRANSPORT->PACKAGING->READY
+      // packaging may take from TRANSPORT and then advance itself to PENYERAHAN
       if (currentStage === "TRANSPORT" || currentStage === "PACKAGING") {
         return getNextStage(currentStage);
       }
       return null;
-    case "PICKUP":
-      return currentStage === "READY" ? "COMPLETED" : null;
-    case "ADMIN":
-      // admin boleh update lewat endpoint admin; staff endpoint tidak memberi bebas stage
+    case "PENYERAHAN":
+      return currentStage === "PENYERAHAN" ? "SELESAI" : null;
+    case "UTAMA":
+      // utama can move along any next stage, acts like super‑user
       return getNextStage(currentStage);
     default:
       return null;
@@ -31,7 +31,9 @@ function getTargetStageForRole(role, currentStage) {
 
 export async function PUT(request) {
   try {
-    const { authenticated, staff } = await verifyStaff(request);
+    const { authenticated, staff, activeRole } = await verifyStaff(request);
+
+    // if the staff has an activeRole cookie, use that; otherwise infer from staff.roles
     if (!authenticated) {
       return ApiResponse.unauthorized("Unauthorized");
     }
@@ -57,11 +59,13 @@ export async function PUT(request) {
       return ApiResponse.notFound("Antrean tidak ditemukan");
     }
 
-    if (queue.status === "COMPLETED" || queue.status === "CANCELLED") {
-      return ApiResponse.conflict("Antrean sudah final (COMPLETED/CANCELLED)");
+    if (queue.status === "SELESAI" || queue.status === "CANCELLED") {
+      return ApiResponse.conflict("Antrean sudah final (SELESAI/CANCELLED)");
     }
 
-    const targetStage = getTargetStageForRole(staff.role, queue.status);
+    // use activeRole (from cookie or inferred) for permission checks
+    const roleToUse = activeRole || (Array.isArray(staff.roles) ? staff.roles[0] : null);
+    const targetStage = getTargetStageForRole(roleToUse, queue.status);
     if (!targetStage) {
       return ApiResponse.forbidden("Role tidak memiliki izin untuk stage ini");
     }

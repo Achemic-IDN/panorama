@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 
 const STATUS_OPTIONS = [
   { value: "ALL", label: "Semua Status" },
-  { value: "WAITING", label: "Waiting" },
+  { value: "MENUNGGU", label: "Menunggu" },
   { value: "PROCESSING", label: "Processing" },
-  { value: "COMPLETED", label: "Completed" },
+  { value: "SELESAI", label: "Selesai" },
   { value: "CANCELLED", label: "Cancelled" },
 ];
 

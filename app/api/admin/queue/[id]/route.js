@@ -6,10 +6,11 @@ import { broadcastQueueUpdate } from "@/lib/realtime";
 
 export const dynamic = 'force-dynamic';
 
-// Verify admin authentication
+import { requireRole } from "@/lib/roleGuard";
+
 async function verifyAuth(request) {
-  const auth = request.cookies.get('auth');
-  return auth?.value === 'admin';
+  const { ok } = await requireRole(request, "UTAMA");
+  return ok;
 }
 
 export async function PUT(request, { params }) {

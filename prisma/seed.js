@@ -3,7 +3,8 @@ const bcrypt = require("bcryptjs");
 
 const prisma = new PrismaClient();
 
-async function upsertStaff({ name, username, password, role }) {
+// now our staff record can contain an array of roles (AdminRole[])
+async function upsertStaff({ name, username, password, roles }) {
   const passwordHash = await bcrypt.hash(password, 10);
 
   await prisma.staff.upsert({
@@ -12,50 +13,60 @@ async function upsertStaff({ name, username, password, role }) {
       name,
       username,
       passwordHash,
-      role,
+      roles,
     },
     update: {
       name,
       passwordHash,
-      role,
+      roles,
     },
   });
 }
 
 async function main() {
+  // create a super‑admin with all roles (UTAMA) plus entry for demonstrations
   await upsertStaff({
-    name: "Administrator",
+    name: "Administrator Utama",
     username: "admin",
     password: "admin123",
-    role: "ADMIN",
+    roles: ["UTAMA"],
   });
 
+  // separate accounts for each station
   await upsertStaff({
-    name: "Entry Staff",
+    name: "Staff Entry",
     username: "entry",
     password: "entry123",
-    role: "ENTRY",
+    roles: ["ENTRY"],
   });
 
   await upsertStaff({
-    name: "Transport Staff",
+    name: "Staff Transport",
     username: "transport",
     password: "transport123",
-    role: "TRANSPORT",
+    roles: ["TRANSPORT"],
   });
 
   await upsertStaff({
-    name: "Packaging Staff",
+    name: "Staff Packaging",
     username: "packaging",
     password: "pack123",
-    role: "PACKAGING",
+    roles: ["PACKAGING"],
   });
 
   await upsertStaff({
-    name: "Pickup Staff",
-    username: "pickup",
-    password: "pick123",
-    role: "PICKUP",
+    name: "Staff Penyerahan",
+    username: "penyerahan",
+    password: "pen123",
+    roles: ["PENYERAHAN"],
+  });
+
+  // example user with multiple roles (entry + transport) for testing role selection screen
+  await upsertStaff({
+    name: "Multi‑role User",
+    username: "multi",
+    password: "multi123",
+    roles: ["ENTRY", "TRANSPORT"],
   });
 }
 

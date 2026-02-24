@@ -19,28 +19,37 @@ enum QueueLogStatus {
 
 // PANORAMA queue status enum
 enum QueueStatus {
-  WAITING
+  MENUNGGU   // waiting for processing
   ENTRY
   TRANSPORT
   PACKAGING
-  READY
-  COMPLETED
+  PENYERAHAN // previously READY
+  SELESAI    // previously COMPLETED
   CANCELLED
 }
 
-enum StaffRole {
-  ENTRY
-  TRANSPORT
-  PACKAGING
-  PICKUP
-  ADMIN
+// old StaffRole is replaced by AdminRole; kept around for migration scripts if needed
+// enum StaffRole {
+//   ENTRY
+//   TRANSPORT
+//   PACKAGING
+//   PICKUP
+//   ADMIN
+// }
+
+enum AdminRole {
+  UTAMA        // super‑admin / monitor all stages
+  ENTRY        // can move MENUNGGU → ENTRY → TRANSPORT
+  TRANSPORT    // can move ENTRY → TRANSPORT → PACKAGING
+  PACKAGING    // can move TRANSPORT → PACKAGING → PENYERAHAN
+  PENYERAHAN   // can move PENYERAHAN → SELESAI
 }
 
 model Queue {
   id        Int         @id @default(autoincrement())
   queue     String      @unique
   mrn       String
-  status    QueueStatus @default(WAITING)
+  status    QueueStatus @default(MENUNGGU)
   entryAt   DateTime?
   transportAt DateTime?
   packagingAt DateTime?
@@ -64,7 +73,7 @@ model PatientLogin {
   queue     String
   mrn       String
   loginTime DateTime @default(now())
-  status    String   @default("WAITING")
+  status    String   @default("MENUNGGU")
 }
 
 model QueueLog {
@@ -106,14 +115,15 @@ model Patient {
 }
 
 model Staff {
-  id           Int       @id @default(autoincrement())
+  id           Int          @id @default(autoincrement())
   name         String
-  role         StaffRole
-  username     String    @unique
-  passwordHash String    @map("password_hash")
-  createdAt    DateTime  @default(now()) @map("created_at")
+  // allow multiple roles per user so we can implement role selection
+  roles        AdminRole[]
+  username     String       @unique
+  passwordHash String       @map("password_hash")
+  createdAt    DateTime     @default(now()) @map("created_at")
 
-  @@map("staff")
+  @@map("staff") // keep existing table name for backwards compatibility
 }
 
 model Prescription {

@@ -8,18 +8,53 @@ export async function POST(request) {
   const body = await request.json();
   const { username, password, role, queue, mrn } = body;
 
-  // Admin login
-  if (role === "admin" && username === "admin" && password === "panorama") {
-    const res = NextResponse.json({ success: true });
+  // Admin login (now dynamic using staff table)
+  if (role === "admin") {
+    if (!username || !password) {
+      return NextResponse.json({ success: false, message: "Username dan password wajib diisi" }, { status: 400 });
+    }
+    try {
+      const staff = await prisma.staff.findUnique({ where: { username } });
+      if (!staff) {
+        return NextResponse.json({ success: false, message: "Username atau password salah" }, { status: 401 });
+      }
+      const bcrypt = require("bcryptjs");
+      const ok = await bcrypt.compare(password, staff.passwordHash);
+      if (!ok) {
+        return NextResponse.json({ success: false, message: "Username atau password salah" }, { status: 401 });
+      }
 
-    res.cookies.set("auth", "admin", {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'lax',
-      path: "/",
-    });
-
-    return res;
+      const res = NextResponse.json({ success: true, data: { roles: staff.roles } });
+      // set generic auth cookie if desired
+      res.cookies.set("auth", "admin", {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax',
+        path: "/",
+      });
+      // also set staff_id for staffAuth to pick up
+      res.cookies.set("staff_id", String(staff.id), {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax',
+        path: "/",
+        maxAge: 60 * 60 * 12,
+      });
+      // if single role set active cookie
+      if (Array.isArray(staff.roles) && staff.roles.length === 1) {
+        res.cookies.set("staff_role", staff.roles[0], {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'lax',
+          path: "/",
+          maxAge: 60 * 60 * 12,
+        });
+      }
+      return res;
+    } catch (err) {
+      console.error("Admin login error:", err);
+      return NextResponse.json({ success: false, message: "Gagal login admin" }, { status: 500 });
+    }
   }
 
   // Patient login validation

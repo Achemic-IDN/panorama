@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { logQueueCreated } from "@/lib/queueLogService";
 
 export const dynamic = 'force-dynamic';
 
@@ -52,6 +53,16 @@ export async function POST(request) {
     const newQueue = await prisma.queue.create({
       data: { queue, mrn },
     });
+
+    // Log initial queue creation as WAITING in QueueLog
+    try {
+      await logQueueCreated({
+        queueNumber: newQueue.queue,
+        medicalRecordNumber: newQueue.mrn,
+      });
+    } catch (logError) {
+      console.error("Failed to log queue creation:", logError);
+    }
 
     return NextResponse.json(newQueue, { status: 201 });
   } catch (error) {

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { logQueueCreated } from "@/lib/queueLogService";
 
 export const dynamic = 'force-dynamic';
 
@@ -114,8 +115,9 @@ export async function POST(request) {
       }
 
       // Also create a queue entry in the database for admin dashboard (best-effort)
+      let newQueue = null;
       try {
-        const newQueue = await prisma.queue.create({
+        newQueue = await prisma.queue.create({
           data: {
             queue,
             mrn: normalizedMrn,
@@ -125,6 +127,16 @@ export async function POST(request) {
       } catch (dbError) {
         // log database failures but don't block patient from logging in
         console.error("Database error creating queue entry (continuing):", dbError);
+      }
+
+      // Log queue creation for this patient in QueueLog
+      try {
+        await logQueueCreated({
+          queueNumber: queue,
+          medicalRecordNumber: normalizedMrn,
+        });
+      } catch (logError) {
+        console.error("Failed to log patient queue creation:", logError);
       }
 
       // Shape data as expected by existing frontend (dashboard & cookies)

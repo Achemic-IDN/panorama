@@ -10,6 +10,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum QueueLogStatus {
+  WAITING
+  PROCESSING
+  COMPLETED
+  CANCELLED
+}
+
 model Queue {
   id        Int      @id @default(autoincrement())
   queue     String   @unique
@@ -34,4 +41,20 @@ model PatientLogin {
   mrn       String
   loginTime DateTime @default(now())
   status    String   @default("Waiting")
+}
+
+model QueueLog {
+  id                  Int            @id @default(autoincrement())
+  queueNumber         String         @map("queue_number") @unique
+  patientName         String?        @map("patient_name")
+  medicalRecordNumber String         @map("medical_record_number")
+  serviceType         String?        @map("service_type")
+  status              QueueLogStatus @default(WAITING)
+  createdAt           DateTime       @default(now()) @map("created_at")
+  calledAt            DateTime?      @map("called_at")
+  completedAt         DateTime?      @map("completed_at")
+  adminId             Int?           @map("admin_id")
+  queueId             Int?           @map("queue_id")
+
+  @@map("queue_logs")
 }

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { logQueueStatusChange } from "@/lib/queueLogService";
 
 export const dynamic = 'force-dynamic';
 
@@ -42,6 +43,17 @@ export async function PUT(request, { params }) {
       where: { id: queueId },
       data: { status },
     });
+
+    // Log status change into QueueLog (maps to WAITING/PROCESSING/COMPLETED)
+    try {
+      await logQueueStatusChange({
+        queueNumber: updatedQueue.queue,
+        medicalRecordNumber: updatedQueue.mrn,
+        newQueueStatus: updatedQueue.status,
+      });
+    } catch (logError) {
+      console.error("Failed to log queue status change:", logError);
+    }
 
     return NextResponse.json(updatedQueue);
   } catch (error) {

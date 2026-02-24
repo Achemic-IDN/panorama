@@ -58,3 +58,45 @@ model QueueLog {
 
   @@map("queue_logs")
 }
+
+model Patient {
+  id           Int      @id @default(autoincrement())
+  mrn          String   @unique
+  name         String
+  phone        String?
+  clinicOrigin String?  @map("clinic_origin")
+
+  @@map("patients")
+}
+
+model Staff {
+  id           Int     @id @default(autoincrement())
+  name         String
+  role         String  // ENTRY | TRANSPORT | PACKAGING | ADMIN
+  username     String  @unique
+  passwordHash String  @map("password_hash")
+
+  @@map("staff")
+}
+
+model Prescription {
+  id        Int      @id @default(autoincrement())
+  queueId   Int?     @map("queue_id")
+  drugList  String   @map("drug_list") // JSON string
+  notes     String?  // instructions / additional notes
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("prescriptions")
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  queueId   Int?     @map("queue_id")
+  phone     String
+  message   String
+  status    String   @default("PENDING")
+  sentAt    DateTime? @map("sent_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@map("notifications")
+}

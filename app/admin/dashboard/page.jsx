@@ -171,7 +171,41 @@ export default function AdminDashboard() {
         borderRadius: "10px",
         boxShadow: "0 10px 30px rgba(0,0,0,0.1)"
       }}>
-        <h1 style={{ textAlign: "center", color: "#28a745", marginBottom: "30px" }}>Dashboard Admin Panorama</h1>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", gap: "12px", flexWrap: "wrap" }}>
+          <h1 style={{ margin: 0, color: "#28a745" }}>Dashboard Admin Panorama</h1>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            <button
+              type="button"
+              onClick={() => router.push("/admin/history")}
+              style={{
+                padding: "8px 14px",
+                background: "linear-gradient(135deg, #007bff 0%, #1e3a8a 100%)",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "14px"
+              }}
+            >
+              Lihat Riwayat Antrean
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push("/admin/feedback")}
+              style={{
+                padding: "8px 14px",
+                background: "linear-gradient(135deg, #28a745 0%, #20c997 100%)",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "14px"
+              }}
+            >
+              Lihat Daftar Feedback
+            </button>
+          </div>
+        </div>
 
         {/* Statistik */}
         <div style={{ display: "flex", gap: "20px", marginBottom: "30px", flexWrap: "wrap" }}>
@@ -299,37 +333,7 @@ export default function AdminDashboard() {
           </tbody>
         </table>
 
-        {/* Tabel Feedback */}
-        <h2 style={{ marginBottom: "20px" }}>Feedback Pasien</h2>
-        <table style={{
-          width: "100%",
-          borderCollapse: "collapse",
-          marginBottom: "40px",
-          boxShadow: "0 5px 15px rgba(0,0,0,0.1)",
-          borderRadius: "5px",
-          overflow: "hidden"
-        }}>
-          <thead style={{ background: "#f8f9fa" }}>
-            <tr>
-              <th style={{ padding: "12px", border: "1px solid #ddd", textAlign: "left" }}>Antrean</th>
-              <th style={{ padding: "12px", border: "1px solid #ddd", textAlign: "left" }}>MRN</th>
-              <th style={{ padding: "12px", border: "1px solid #ddd", textAlign: "left" }}>Pesan</th>
-              <th style={{ padding: "12px", border: "1px solid #ddd", textAlign: "left" }}>Rating</th>
-              <th style={{ padding: "12px", border: "1px solid #ddd", textAlign: "left" }}>Waktu</th>
-            </tr>
-          </thead>
-          <tbody>
-            {feedbacks.map((f, i) => (
-              <tr key={f.id} style={{ background: i % 2 === 0 ? "#fff" : "#f8f9fa" }}>
-                <td style={{ padding: "12px", border: "1px solid #ddd" }}>{f.queue}</td>
-                <td style={{ padding: "12px", border: "1px solid #ddd" }}>{f.mrn}</td>
-                <td style={{ padding: "12px", border: "1px solid #ddd" }}>{f.message}</td>
-                <td style={{ padding: "12px", border: "1px solid #ddd" }}>{'⭐'.repeat(f.rating)} ({f.rating})</td>
-                <td style={{ padding: "12px", border: "1px solid #ddd" }}>{new Date(f.time).toLocaleString()}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {/* Tabel Feedback dipindahkan ke /admin/feedback */}
       </main>
     </div>
   );

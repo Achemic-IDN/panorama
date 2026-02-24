@@ -103,7 +103,7 @@ export async function POST(request) {
           data: {
             queue,
             mrn: normalizedMrn,
-            status: "Waiting",
+            status: "WAITING",
           },
         });
       } catch (dbError) {
@@ -145,7 +145,7 @@ export async function POST(request) {
         nomorAntrean: patientLoginRecord.queue,
         nomorRekamMedis: patientLoginRecord.mrn,
         waktuLogin: patientLoginRecord.loginTime.toISOString(),
-        statusAntrean: patientLoginRecord.status || "Waiting",
+        statusAntrean: patientLoginRecord.status || "WAITING",
       };
 
       console.log("Pasien login tersimpan (Prisma):", newPatient);

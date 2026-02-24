@@ -15,7 +15,7 @@ function mapPatientLoginRecord(record) {
     nomorAntrean: record.queue,
     nomorRekamMedis: record.mrn,
     waktuLogin: record.loginTime,
-    statusAntrean: record.status || "Waiting",
+    statusAntrean: record.status || "WAITING",
   };
 }
 
@@ -95,7 +95,7 @@ export async function POST(request) {
       data: {
         queue,
         mrn,
-        status: "Waiting",
+        status: "WAITING",
       },
     });
 

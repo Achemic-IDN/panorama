@@ -10,6 +10,27 @@ async function verifyAuth(request) {
   return auth?.value === 'admin';
 }
 
+// Enum status resmi PANORAMA
+const VALID_STATUSES = [
+  "WAITING",
+  "ENTRY",
+  "TRANSPORT",
+  "PACKAGING",
+  "READY",
+  "COMPLETED",
+  "CANCELLED",
+];
+
+const NEXT_STATUS = {
+  WAITING: "ENTRY",
+  ENTRY: "TRANSPORT",
+  TRANSPORT: "PACKAGING",
+  PACKAGING: "READY",
+  READY: "COMPLETED",
+  COMPLETED: null,
+  CANCELLED: null,
+};
+
 export async function PUT(request, { params }) {
   try {
     const isAdmin = await verifyAuth(request);
@@ -25,9 +46,7 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: "Status is required" }, { status: 400 });
     }
 
-    // Validate status value
-    const validStatuses = ["Menunggu", "Dipanggil", "Selesai"];
-    if (!validStatuses.includes(status)) {
+    if (!VALID_STATUSES.includes(status)) {
       return NextResponse.json(
         { error: "Invalid status value" },
         { status: 400 }
@@ -37,6 +56,46 @@ export async function PUT(request, { params }) {
     const queueId = parseInt(id);
     if (isNaN(queueId)) {
       return NextResponse.json({ error: "Invalid queue ID" }, { status: 400 });
+    }
+
+    const currentQueue = await prisma.queue.findUnique({
+      where: { id: queueId },
+    });
+
+    if (!currentQueue) {
+      return NextResponse.json({ error: "Queue not found" }, { status: 404 });
+    }
+
+    const currentStatus = currentQueue.status;
+
+    // Izinkan idempoten: status tidak berubah
+    if (currentStatus === status) {
+      return NextResponse.json(currentQueue);
+    }
+
+    // Aturan workflow:
+    // WAITING -> ENTRY -> TRANSPORT -> PACKAGING -> READY -> COMPLETED
+    // Tidak boleh mundur, tidak boleh lompat.
+    // CANCELLED diizinkan dari status apapun kecuali COMPLETED/CANCELLED.
+    const allowedNext = NEXT_STATUS[currentStatus] || null;
+
+    const isCancelTransition =
+      status === "CANCELLED" &&
+      currentStatus !== "COMPLETED" &&
+      currentStatus !== "CANCELLED";
+
+    if (!isCancelTransition && status !== allowedNext) {
+      return NextResponse.json(
+        {
+          error: "Invalid workflow transition",
+          details: {
+            from: currentStatus,
+            to: status,
+            allowedNext,
+          },
+        },
+        { status: 400 }
+      );
     }
 
     const updatedQueue = await prisma.queue.update({

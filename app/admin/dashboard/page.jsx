@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { WORKFLOW_ORDER, NEXT_STATUS, getStatusLabel, isInProgressStatus } from "@/lib/status";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -94,12 +95,14 @@ export default function AdminDashboard() {
   const [newPatientQueue, setNewPatientQueue] = useState("");
   const [newPatientMrn, setNewPatientMrn] = useState("");
 
-  // Calculate stats from queues
+  // Calculate stats from queues (menggunakan enum baru)
   const stats = {
     total: queues.length,
-    waiting: queues.filter(q => q.status === "Menunggu").length,
-    called: queues.filter(q => q.status === "Dipanggil").length,
-    completed: queues.filter(q => q.status === "Selesai").length,
+    waiting: queues.filter(q => q.status === "WAITING").length,
+    inProgress: queues.filter(q =>
+      ["ENTRY", "TRANSPORT", "PACKAGING", "READY"].includes(q.status)
+    ).length,
+    completed: queues.filter(q => q.status === "COMPLETED").length,
   };
 
   const createQueue = async () => {
@@ -229,8 +232,8 @@ export default function AdminDashboard() {
             <p style={{ fontSize: "24px", color: "#856404" }}>{stats.waiting}</p>
           </div>
           <div style={{ background: "#d1ecf1", padding: "20px", borderRadius: "8px", flex: 1, minWidth: "150px", textAlign: "center" }}>
-            <h3>Dipanggil</h3>
-            <p style={{ fontSize: "24px", color: "#0c5460" }}>{stats.called}</p>
+            <h3>Sedang Diproses</h3>
+            <p style={{ fontSize: "24px", color: "#0c5460" }}>{stats.inProgress}</p>
           </div>
           <div style={{ background: "#d4edda", padding: "20px", borderRadius: "8px", flex: 1, minWidth: "150px", textAlign: "center" }}>
             <h3>Selesai</h3>
@@ -296,47 +299,88 @@ export default function AdminDashboard() {
                 <td style={{ padding: "12px", border: "1px solid #ddd" }}>{q.queue}</td>
                 <td style={{ padding: "12px", border: "1px solid #ddd" }}>{q.mrn}</td>
                 <td style={{ padding: "12px", border: "1px solid #ddd" }}>
-                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                    {["Menunggu", "Dipanggil", "Selesai"].map((status) => {
-                      let background = "#f8f9fa";
-                      let color = "#333";
+                  <div style={{ marginBottom: "6px", fontSize: "13px" }}>
+                    Tahap saat ini: <strong>{getStatusLabel(q.status)}</strong>
+                  </div>
+                  <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center", marginBottom: "6px" }}>
+                    {WORKFLOW_ORDER.map((statusCode, index) => {
+                      const label = getStatusLabel(statusCode);
+                      const isActive = q.status === statusCode;
+                      const nextStatus = NEXT_STATUS[q.status] || null;
+                      const isNext = statusCode === nextStatus;
+                      const isLoading =
+                        updatingQueueId === q.id && updatingStatus === statusCode;
 
-                      if (status === "Menunggu") {
+                      let background = "#f8f9fa";
+                      let color = "#343a40";
+
+                      if (statusCode === "WAITING") {
                         background = "#fff3cd";
                         color = "#856404";
-                      } else if (status === "Dipanggil") {
+                      } else if (["ENTRY", "TRANSPORT", "PACKAGING", "READY"].includes(statusCode)) {
                         background = "#cce5ff";
                         color = "#004085";
-                      } else if (status === "Selesai") {
+                      } else if (statusCode === "COMPLETED") {
                         background = "#d4edda";
                         color = "#155724";
                       }
 
-                      const isActive = q.status === status;
-                      const isLoading =
-                        updatingQueueId === q.id && updatingStatus === status;
+                      const disabled =
+                        !isNext || isLoading || q.status === "COMPLETED" || q.status === "CANCELLED";
 
                       return (
                         <button
-                          key={status}
+                          key={statusCode}
                           type="button"
-                          onClick={() => updateQueueStatus(q.id, status)}
-                          disabled={isLoading || isActive}
+                          onClick={() => {
+                            if (!disabled) {
+                              updateQueueStatus(q.id, statusCode);
+                            }
+                          }}
+                          disabled={disabled}
                           style={{
-                            padding: "6px 10px",
+                            padding: "4px 8px",
                             borderRadius: "4px",
                             border: isActive ? "2px solid #343a40" : "1px solid #ced4da",
                             background,
                             color,
-                            cursor: isLoading || isActive ? "not-allowed" : "pointer",
-                            fontSize: "12px",
+                            cursor: disabled ? "not-allowed" : "pointer",
+                            fontSize: "11px",
                             minWidth: "80px",
+                            opacity: isNext || isActive ? 1 : 0.5,
                           }}
                         >
-                          {isLoading ? "Mengubah..." : status}
+                          {isLoading ? "Mengubah..." : label}
                         </button>
                       );
                     })}
+                    {/* Tombol batalkan */}
+                    <button
+                      type="button"
+                      onClick={() => updateQueueStatus(q.id, "CANCELLED")}
+                      disabled={
+                        q.status === "COMPLETED" ||
+                        q.status === "CANCELLED" ||
+                        updatingQueueId === q.id
+                      }
+                      style={{
+                        padding: "4px 10px",
+                        borderRadius: "4px",
+                        border: "1px solid #dc3545",
+                        background: "#f8d7da",
+                        color: "#721c24",
+                        cursor:
+                          q.status === "COMPLETED" ||
+                          q.status === "CANCELLED" ||
+                          updatingQueueId === q.id
+                            ? "not-allowed"
+                            : "pointer",
+                        fontSize: "11px",
+                        minWidth: "90px",
+                      }}
+                    >
+                      Batalkan
+                    </button>
                   </div>
                 </td>
                 <td style={{ padding: "12px", border: "1px solid #ddd" }}>{new Date(q.createdAt).toLocaleString()}</td>

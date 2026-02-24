@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getStatusLabel, isInProgressStatus } from "@/lib/status";
 
 export default function DashboardPage() {
   const [message, setMessage] = useState("");
@@ -103,7 +104,9 @@ export default function DashboardPage() {
           // Jika ada perubahan status yang nyata, tampilkan notifikasi singkat
           if (previousStatus && previousStatus !== newStatus) {
             setStatusChangeMessage(
-              `Status antrean Anda berubah dari "${previousStatus}" menjadi "${newStatus}".`
+              `Status antrean Anda berubah dari "${getStatusLabel(
+                previousStatus
+              )}" menjadi "${getStatusLabel(newStatus)}".`
             );
             setLastStatus(newStatus);
 
@@ -196,16 +199,20 @@ export default function DashboardPage() {
               padding: "12px 16px",
               borderRadius: "6px",
               background:
-                lastStatus === "Dipanggil"
-                  ? "#cce5ff"
-                  : lastStatus === "Selesai"
+                lastStatus === "COMPLETED"
                   ? "#d4edda"
+                  : lastStatus === "CANCELLED"
+                  ? "#f8d7da"
+                  : isInProgressStatus(lastStatus)
+                  ? "#cce5ff"
                   : "#fff3cd",
               color:
-                lastStatus === "Dipanggil"
-                  ? "#004085"
-                  : lastStatus === "Selesai"
+                lastStatus === "COMPLETED"
                   ? "#155724"
+                  : lastStatus === "CANCELLED"
+                  ? "#721c24"
+                  : isInProgressStatus(lastStatus)
+                  ? "#004085"
                   : "#856404",
               border: "1px solid rgba(0,0,0,0.1)",
               fontSize: "14px",
@@ -226,7 +233,10 @@ export default function DashboardPage() {
             }}>
               <p><strong>Nomor Antrean:</strong> {patientData ? patientData.nomorAntrean : "Loading..."}</p>
               <p><strong>Nomor MRN:</strong> {patientData ? patientData.nomorRekamMedis : "Loading..."}</p>
-              <p><strong>Status:</strong> {patientData ? patientData.statusAntrean : "Loading..."}</p>
+              <p>
+                <strong>Status:</strong>{" "}
+                {patientData ? getStatusLabel(patientData.statusAntrean) : "Loading..."}
+              </p>
               {statusError && (
                 <p style={{ marginTop: "8px", color: "red", fontSize: "14px" }}>
                   {statusError}

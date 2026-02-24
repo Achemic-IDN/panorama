@@ -87,10 +87,17 @@ export async function POST(request) {
       );
     }
 
-    // Allow any queue number, no validation needed
+    // Queue must be provided and only contain digits
     if (!queue) {
       return NextResponse.json(
         { success: false, message: "Nomor antrean wajib diisi" },
+        { status: 400 }
+      );
+    }
+
+    if (!/^[0-9]+$/.test(queue)) {
+      return NextResponse.json(
+        { success: false, message: "Nomor antrean hanya boleh berisi angka" },
         { status: 400 }
       );
     }
@@ -164,8 +171,17 @@ export async function POST(request) {
       return res;
     } catch (error) {
       console.error("Error saving patient login:", error);
+      // provide more specific message when possible
+      if (error?.code === 'P2002') {
+        // unique constraint violation
+        return NextResponse.json(
+          { success: false, message: "Nomor antrean sudah digunakan (duplikat)" },
+          { status: 400 }
+        );
+      }
+
       return NextResponse.json(
-        { success: false, message: "Gagal menyimpan data login" },
+        { success: false, message: "Gagal menyimpan data login: " + (error.message || error) },
         { status: 500 }
       );
     }

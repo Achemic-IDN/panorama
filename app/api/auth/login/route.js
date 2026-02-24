@@ -113,15 +113,20 @@ export async function POST(request) {
         );
       }
 
-      // Check for duplicate queue number in database queues
-      const existingQueue = await prisma.queue.findUnique({
-        where: { queue: queue }
-      });
-      if (existingQueue) {
-        return NextResponse.json(
-          { success: false, message: "Nomor antrean sudah digunakan" },
-          { status: 400 }
-        );
+      // Check for duplicate queue number in database queues (ignore on failure)
+      try {
+        const existingQueue = await prisma.queue.findUnique({
+          where: { queue: queue }
+        });
+        if (existingQueue) {
+          return NextResponse.json(
+            { success: false, message: "Nomor antrean sudah digunakan" },
+            { status: 400 }
+          );
+        }
+      } catch (dbError) {
+        console.error("Database check failed (continuing):", dbError);
+        // allow login to proceed even if database isn't available
       }
 
       // Create new patient record for patient-login API
@@ -137,15 +142,20 @@ export async function POST(request) {
       writePatientsData(patients);
 
       // Also create a queue entry in the database for admin dashboard
-      const newQueue = await prisma.queue.create({
-        data: {
-          queue: queue,
-          mrn: mrn.toUpperCase()
-        },
-      });
+      try {
+        const newQueue = await prisma.queue.create({
+          data: {
+            queue: queue,
+            mrn: mrn.toUpperCase()
+          },
+        });
+        console.log("Antrean dibuat:", newQueue);
+      } catch (dbError) {
+        // log database failures but don't block patient from logging in
+        console.error("Database error creating queue entry (continuing):", dbError);
+      }
 
       console.log("Pasien login tersimpan:", newPatient);
-      console.log("Antrean dibuat:", newQueue);
 
       const res = NextResponse.json({
         success: true,

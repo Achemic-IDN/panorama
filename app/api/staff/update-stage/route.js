@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { verifyStaff } from "@/lib/staffAuth";
 import { getNextStage } from "@/lib/workflowConfig";
 import { updateQueueStage } from "@/lib/queueWorkflowService";
+import { broadcastQueueUpdate } from "@/lib/realtime";
 
 export const dynamic = "force-dynamic";
 
@@ -77,6 +78,13 @@ export async function PUT(request) {
       }
       console.error("updateQueueStage failed:", error);
       return ApiResponse.serverError("Gagal memperbarui stage antrean", { message: error?.message });
+    }
+
+    // Broadcast ke semua listener realtime
+    try {
+      broadcastQueueUpdate(updated);
+    } catch (e) {
+      console.error("Failed to broadcast queue update (staff):", e);
     }
 
     return ApiResponse.success(updated);

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { logQueueCreated } from "@/lib/queueLogService";
+import { broadcastQueueUpdate } from "@/lib/realtime";
 
 export const dynamic = 'force-dynamic';
 
@@ -62,6 +63,13 @@ export async function POST(request) {
       });
     } catch (logError) {
       console.error("Failed to log queue creation:", logError);
+    }
+
+    // Broadcast antrean baru
+    try {
+      broadcastQueueUpdate(newQueue);
+    } catch (e) {
+      console.error("Failed to broadcast new queue:", e);
     }
 
     return NextResponse.json(newQueue, { status: 201 });

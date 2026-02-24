@@ -14,6 +14,7 @@ export default function AdminDashboard() {
   const [error, setError] = useState(null);
   const [updatingQueueId, setUpdatingQueueId] = useState(null);
   const [updatingStatus, setUpdatingStatus] = useState(null);
+  const [realtimeError, setRealtimeError] = useState(null);
 
   useEffect(() => {
     async function checkAuth() {
@@ -65,6 +66,43 @@ export default function AdminDashboard() {
     }
     checkAuth();
   }, [router]);
+
+  // Realtime update antrean via SSE
+  useEffect(() => {
+    if (loading) return;
+
+    const source = new EventSource("/api/realtime/queue");
+
+    source.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (!data || !data.id) return;
+
+        setQueues((prev) => {
+          const idx = prev.findIndex((q) => q.id === data.id);
+          if (idx === -1) {
+            // Tambahkan antrean baru bila belum ada
+            return [data, ...prev];
+          }
+          const next = [...prev];
+          next[idx] = { ...next[idx], ...data };
+          return next;
+        });
+        setRealtimeError(null);
+      } catch (e) {
+        console.error("Invalid SSE queue data (admin):", e);
+      }
+    };
+
+    source.onerror = (err) => {
+      console.error("SSE error (admin dashboard):", err);
+      setRealtimeError("Koneksi realtime antrean terputus, akan mencoba ulang otomatis.");
+    };
+
+    return () => {
+      source.close();
+    };
+  }, [loading]);
 
   const updateQueueStatus = async (id, status) => {
     setUpdatingQueueId(id);
@@ -234,6 +272,12 @@ export default function AdminDashboard() {
             </button>
           </div>
         </div>
+
+        {realtimeError && (
+          <div style={{ marginBottom: "10px", background: "#fff3cd", color: "#856404", padding: "8px 10px", borderRadius: "6px" }}>
+            {realtimeError}
+          </div>
+        )}
 
         {/* Statistik */}
         <div style={{ display: "flex", gap: "20px", marginBottom: "30px", flexWrap: "wrap" }}>

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { PANORAMA_STATUSES } from "@/lib/status";
 import { updateQueueStage } from "@/lib/queueWorkflowService";
+import { broadcastQueueUpdate } from "@/lib/realtime";
 
 export const dynamic = 'force-dynamic';
 
@@ -62,6 +63,12 @@ export async function PUT(request, { params }) {
         { error: "Failed to update queue stage" },
         { status: 500 }
       );
+    }
+
+    try {
+      broadcastQueueUpdate(updatedQueue);
+    } catch (e) {
+      console.error("Failed to broadcast queue update (admin):", e);
     }
 
     return NextResponse.json(updatedQueue);

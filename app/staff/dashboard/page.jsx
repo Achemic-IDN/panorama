@@ -60,6 +60,42 @@ export default function StaffDashboardPage() {
     loadQueues();
   }, []);
 
+  // Realtime update antrean untuk staff via SSE
+  useEffect(() => {
+    const source = new EventSource("/api/realtime/queue");
+
+    source.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (!data || !data.id) return;
+
+        setQueues((prev) => {
+          const idx = prev.findIndex((q) => q.id === data.id);
+          if (idx === -1) {
+            // Hanya tambahkan jika status antrean sesuai filter role saat ini
+            // (server-side filter di /api/staff/queues sudah mengatur,
+            //  SSE ini bersifat best-effort untuk sinkron incremental)
+            if (!staff) return prev;
+            return prev;
+          }
+          const next = [...prev];
+          next[idx] = { ...next[idx], ...data };
+          return next;
+        });
+      } catch (e) {
+        console.error("Invalid SSE queue data (staff):", e);
+      }
+    };
+
+    source.onerror = (err) => {
+      console.error("SSE error (staff dashboard):", err);
+    };
+
+    return () => {
+      source.close();
+    };
+  }, [staff]);
+
   async function advance(queueId) {
     setUpdatingId(queueId);
     try {

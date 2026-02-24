@@ -64,44 +64,30 @@ export default function DashboardPage() {
     }
   }, []);
 
-  // Polling status antrean real-time setiap beberapa detik
+  // Realtime update status antrean via SSE
   useEffect(() => {
     if (!patientData?.nomorAntrean || !patientData?.nomorRekamMedis) {
       return;
     }
 
-    let cancelled = false;
+    const source = new EventSource("/api/realtime/queue");
 
-    const fetchStatus = async () => {
+    source.onmessage = (event) => {
       try {
-        const res = await fetch(
-          `/api/queue/status?queue=${encodeURIComponent(
-            patientData.nomorAntrean
-          )}&mrn=${encodeURIComponent(patientData.nomorRekamMedis)}`
-        );
-
-        if (!res.ok) {
-          // Jika antrean tidak ditemukan, jangan spamming error ke user
-          if (res.status !== 404) {
-            console.error("Failed to fetch queue status");
-            setStatusError("Gagal mengambil status antrean");
-          }
+        const data = JSON.parse(event.data);
+        if (
+          !data ||
+          data.queue !== patientData.nomorAntrean ||
+          data.mrn !== patientData.nomorRekamMedis
+        ) {
           return;
         }
 
-        const json = await res.json();
-        if (!json?.success || !json?.data) {
-          return;
-        }
-
-        if (cancelled) return;
-
-        const newStatus = json.data.status;
+        const newStatus = data.status;
 
         setPatientData((prev) => {
           const previousStatus = prev?.statusAntrean;
 
-          // Jika ada perubahan status yang nyata, tampilkan notifikasi singkat
           if (previousStatus && previousStatus !== newStatus) {
             setStatusChangeMessage(
               `Status antrean Anda berubah dari "${getStatusLabel(
@@ -109,8 +95,6 @@ export default function DashboardPage() {
               )}" menjadi "${getStatusLabel(newStatus)}".`
             );
             setLastStatus(newStatus);
-
-            // Auto-dismiss setelah beberapa detik
             setTimeout(() => {
               setStatusChangeMessage("");
             }, 6000);
@@ -120,26 +104,23 @@ export default function DashboardPage() {
             ? {
                 ...prev,
                 statusAntrean: newStatus,
-                updatedAt: json.data.updatedAt,
+                updatedAt: data.updatedAt || prev.updatedAt,
               }
             : prev;
         });
         setStatusError(null);
-      } catch (err) {
-        console.error("Error polling queue status:", err);
-        if (!cancelled) {
-          setStatusError("Gagal mengambil status antrean");
-        }
+      } catch (e) {
+        console.error("Invalid SSE queue data:", e);
       }
     };
 
-    // panggil segera sekali, lalu interval
-    fetchStatus();
-    const intervalId = setInterval(fetchStatus, 4000); // 4 detik di tengah 3–5 detik
+    source.onerror = (err) => {
+      console.error("SSE error (patient dashboard):", err);
+      setStatusError("Koneksi realtime terputus, mencoba ulang otomatis...");
+    };
 
     return () => {
-      cancelled = true;
-      clearInterval(intervalId);
+      source.close();
     };
   }, [patientData?.nomorAntrean, patientData?.nomorRekamMedis]);
 

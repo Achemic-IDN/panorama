@@ -1,52 +1,21 @@
 import { NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
-
-const patientsFilePath = path.join(process.cwd(), "data", "patients.json");
-
-// For Vercel compatibility - use multiple fallback strategies
-const isVercel = process.env.VERCEL === '1';
-const vercelPatientsFilePath = path.join('/tmp', 'patients.json');
-const finalPatientsFilePath = isVercel ? vercelPatientsFilePath : patientsFilePath;
-
-// In-memory storage as fallback for Vercel (persists during function execution)
-let inMemoryPatients = [];
+import { prisma } from "@/lib/prisma";
 
 // Verify admin authentication
 async function verifyAuth(request) {
-  const auth = request.cookies.get('auth');
-  return auth?.value === 'admin';
+  const auth = request.cookies.get("auth");
+  return auth?.value === "admin";
 }
 
-// Helper function to read patients data with multiple fallbacks
-function readPatientsData() {
-  // Try file storage first
-  try {
-    const data = fs.readFileSync(finalPatientsFilePath, "utf8");
-    const parsedData = JSON.parse(data);
-    // Sync in-memory storage with file data
-    inMemoryPatients = parsedData;
-    return parsedData;
-  } catch (fileError) {
-    console.log("File storage not available, using in-memory storage");
-    // Fallback to in-memory storage
-    return inMemoryPatients;
-  }
-}
-
-// Helper function to write patients data with multiple strategies
-function writePatientsData(data) {
-  // Update in-memory storage first (always works)
-  inMemoryPatients = data;
-
-  // Try to write to file as backup
-  try {
-    fs.writeFileSync(finalPatientsFilePath, JSON.stringify(data, null, 2));
-    console.log("Data saved to file storage");
-  } catch (fileError) {
-    console.log("File storage failed, data stored in memory only");
-    // Data is still stored in memory, which works for the current session
-  }
+// Map Prisma PatientLogin record to the shape expected by frontend
+function mapPatientLoginRecord(record) {
+  return {
+    id: record.id,
+    nomorAntrean: record.queue,
+    nomorRekamMedis: record.mrn,
+    waktuLogin: record.loginTime,
+    statusAntrean: record.status || "Waiting",
+  };
 }
 
 export async function GET(request) {
@@ -56,8 +25,16 @@ export async function GET(request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const patients = readPatientsData();
-    return NextResponse.json(patients);
+    const { searchParams } = new URL(request.url);
+    const mrn = searchParams.get("mrn") || undefined;
+
+    const logins = await prisma.patientLogin.findMany({
+      where: mrn ? { mrn } : undefined,
+      orderBy: { loginTime: "desc" },
+    });
+
+    const result = logins.map(mapPatientLoginRecord);
+    return NextResponse.json(result);
   } catch (error) {
     console.error("Error fetching patients:", error);
     return NextResponse.json({ error: "Failed to fetch patients" }, { status: 500 });
@@ -72,10 +49,10 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { queue: nomorAntrean, mrn: nomorRekamMedis } = body;
+    const { queue, mrn } = body;
 
     // Validate required fields
-    if (!nomorAntrean || !nomorRekamMedis) {
+    if (!queue || !mrn) {
       return NextResponse.json(
         { error: "Queue and MRN are required" },
         { status: 400 }
@@ -83,38 +60,35 @@ export async function POST(request) {
     }
 
     // Validate MRN format (numbers only, max 8 chars)
-    if (!/^[0-9]+$/.test(nomorRekamMedis) || nomorRekamMedis.length > 8) {
+    if (!/^[0-9]+$/.test(mrn) || mrn.length > 8) {
       return NextResponse.json(
         { error: "MRN must be numeric and max 8 characters" },
         { status: 400 }
       );
     }
 
-    // Check for duplicate queue number
-    const patients = readPatientsData();
-    const existingPatient = patients.find(p => p.nomorAntrean === nomorAntrean);
-    if (existingPatient) {
+    // Check for duplicate queue number for this MRN
+    const existing = await prisma.patientLogin.findFirst({
+      where: { queue, mrn },
+    });
+    if (existing) {
       return NextResponse.json(
-        { error: "Queue number already exists" },
+        { error: "Queue number already exists for this MRN" },
         { status: 409 }
       );
     }
 
-    // Create new patient record
-    const newPatient = {
-      id: patients.length > 0 ? Math.max(...patients.map(p => p.id)) + 1 : 1,
-      nomorAntrean,
-      nomorRekamMedis,
-      waktuLogin: new Date().toISOString(),
-      statusAntrean: "Waiting"
-    };
+    const created = await prisma.patientLogin.create({
+      data: {
+        queue,
+        mrn,
+        status: "Waiting",
+      },
+    });
 
-    patients.push(newPatient);
-    writePatientsData(patients);
+    console.log("Pasien baru ditambahkan (Prisma):", created);
 
-    console.log("Pasien baru ditambahkan:", newPatient);
-
-    return NextResponse.json(newPatient, { status: 201 });
+    return NextResponse.json(mapPatientLoginRecord(created), { status: 201 });
   } catch (error) {
     console.error("Error creating patient:", error);
     return NextResponse.json({ error: "Failed to create patient" }, { status: 500 });
@@ -128,9 +102,8 @@ export async function DELETE(request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Clear all patient data
-    writePatientsData([]);
-    console.log("Semua data pasien telah dihapus");
+    await prisma.patientLogin.deleteMany();
+    console.log("Semua data pasien telah dihapus dari Prisma");
     return NextResponse.json({ message: "All patients deleted successfully" }, { status: 200 });
   } catch (error) {
     console.error("Error deleting patients:", error);

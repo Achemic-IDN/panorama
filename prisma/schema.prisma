@@ -33,4 +33,5 @@ model PatientLogin {
   queue     String
   mrn       String
   loginTime DateTime @default(now())
+  status    String   @default("Waiting")
 }

@@ -1,49 +1,7 @@
 import { NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = 'force-dynamic';
-
-// Patient data storage configuration
-const patientsFilePath = path.join(process.cwd(), "data", "patients.json");
-const isVercel = process.env.VERCEL === '1';
-const vercelPatientsFilePath = path.join('/tmp', 'patients.json');
-const finalPatientsFilePath = isVercel ? vercelPatientsFilePath : patientsFilePath;
-
-// In-memory storage as fallback for Vercel (persists during function execution)
-let inMemoryPatients = [];
-
-// Helper function to read patients data with multiple fallbacks
-function readPatientsData() {
-  // Try file storage first
-  try {
-    const data = fs.readFileSync(finalPatientsFilePath, "utf8");
-    const parsedData = JSON.parse(data);
-    // Sync in-memory storage with file data
-    inMemoryPatients = parsedData;
-    return parsedData;
-  } catch (fileError) {
-    console.log("File storage not available, using in-memory storage");
-    // Fallback to in-memory storage
-    return inMemoryPatients;
-  }
-}
-
-// Helper function to write patients data with multiple strategies
-function writePatientsData(data) {
-  // Update in-memory storage first (always works)
-  inMemoryPatients = data;
-
-  // Try to write to file as backup
-  try {
-    fs.writeFileSync(finalPatientsFilePath, JSON.stringify(data, null, 2));
-    console.log("Data saved to file storage");
-  } catch (fileError) {
-    console.log("File storage failed, data stored in memory only");
-    // Data is still stored in memory, which works for the current session
-  }
-}
 
 export async function POST(request) {
   const body = await request.json();
@@ -103,20 +61,28 @@ export async function POST(request) {
     }
 
     try {
-      // Check for duplicate queue number in both patient logins and queues
-      const patients = readPatientsData();
-      const existingPatient = patients.find(p => p.nomorAntrean === queue);
-      if (existingPatient) {
-        return NextResponse.json(
-          { success: false, message: "Nomor antrean sudah digunakan" },
-          { status: 400 }
-        );
+      // Normalize MRN
+      const normalizedMrn = mrn.toUpperCase();
+
+      // Prevent duplicate queue number being used by multiple logins
+      try {
+        const existingLogin = await prisma.patientLogin.findFirst({
+          where: { queue, mrn: normalizedMrn },
+        });
+        if (existingLogin) {
+          return NextResponse.json(
+            { success: false, message: "Login untuk nomor antrean dan MRN ini sudah tercatat" },
+            { status: 400 }
+          );
+        }
+      } catch (dbError) {
+        console.error("Database check for existing patient login failed (continuing):", dbError);
       }
 
-      // Check for duplicate queue number in database queues (ignore on failure)
+      // Also check for duplicate queue number in database queues (ignore on failure)
       try {
         const existingQueue = await prisma.queue.findUnique({
-          where: { queue: queue }
+          where: { queue },
         });
         if (existingQueue) {
           return NextResponse.json(
@@ -125,28 +91,34 @@ export async function POST(request) {
           );
         }
       } catch (dbError) {
-        console.error("Database check failed (continuing):", dbError);
+        console.error("Database check for existing queue failed (continuing):", dbError);
         // allow login to proceed even if database isn't available
       }
 
-      // Create new patient record for patient-login API
-      const newPatient = {
-        id: patients.length > 0 ? Math.max(...patients.map(p => p.id)) + 1 : 1,
-        nomorAntrean: queue,
-        nomorRekamMedis: mrn.toUpperCase(),
-        waktuLogin: new Date().toISOString(),
-        statusAntrean: "Waiting"
-      };
+      // Create a persistent record in Prisma for this patient login
+      let patientLoginRecord;
+      try {
+        patientLoginRecord = await prisma.patientLogin.create({
+          data: {
+            queue,
+            mrn: normalizedMrn,
+            status: "Waiting",
+          },
+        });
+      } catch (dbError) {
+        console.error("Database error creating patient login record:", dbError);
+        return NextResponse.json(
+          { success: false, message: "Gagal menyimpan riwayat login pasien" },
+          { status: 500 }
+        );
+      }
 
-      patients.push(newPatient);
-      writePatientsData(patients);
-
-      // Also create a queue entry in the database for admin dashboard
+      // Also create a queue entry in the database for admin dashboard (best-effort)
       try {
         const newQueue = await prisma.queue.create({
           data: {
-            queue: queue,
-            mrn: mrn.toUpperCase()
+            queue,
+            mrn: normalizedMrn,
           },
         });
         console.log("Antrean dibuat:", newQueue);
@@ -155,17 +127,26 @@ export async function POST(request) {
         console.error("Database error creating queue entry (continuing):", dbError);
       }
 
-      console.log("Pasien login tersimpan:", newPatient);
+      // Shape data as expected by existing frontend (dashboard & cookies)
+      const newPatient = {
+        id: patientLoginRecord.id,
+        nomorAntrean: patientLoginRecord.queue,
+        nomorRekamMedis: patientLoginRecord.mrn,
+        waktuLogin: patientLoginRecord.loginTime.toISOString(),
+        statusAntrean: patientLoginRecord.status || "Waiting",
+      };
+
+      console.log("Pasien login tersimpan (Prisma):", newPatient);
 
       const res = NextResponse.json({
         success: true,
-        patientData: newPatient
+        patientData: newPatient,
       });
 
       res.cookies.set("auth", "patient", {
         httpOnly: true,
         secure: true,
-        sameSite: 'lax',
+        sameSite: "lax",
         path: "/",
       });
 
@@ -173,7 +154,7 @@ export async function POST(request) {
       res.cookies.set("patientData", JSON.stringify(newPatient), {
         httpOnly: false, // Allow client-side access
         secure: true,
-        sameSite: 'lax',
+        sameSite: "lax",
         path: "/",
         maxAge: 60 * 60 * 24, // 24 hours
       });
@@ -182,7 +163,7 @@ export async function POST(request) {
     } catch (error) {
       console.error("Error saving patient login:", error);
       // provide more specific message when possible
-      if (error?.code === 'P2002') {
+      if (error?.code === "P2002") {
         // unique constraint violation
         return NextResponse.json(
           { success: false, message: "Nomor antrean sudah digunakan (duplikat)" },

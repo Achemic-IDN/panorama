@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getStatusLabel, isInProgressStatus } from "@/lib/status";
 import { getNextStage } from "@/lib/workflowConfig";
+import StatusBadge from "@/lib/components/StatusBadge";
+import ProgressTracker from "@/lib/components/ProgressTracker";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -354,16 +356,24 @@ export default function AdminDashboard() {
           <tbody>
             {queues.map((q, i) => (
               <tr key={q.id} style={{ background: i % 2 === 0 ? "#fff" : "#f8f9fa" }}>
-                <td style={{ padding: "12px", border: "1px solid #ddd" }}>{q.queue}</td>
+                <td style={{ padding: "12px", border: "1px solid #ddd" }}>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: '#1e3a8a' }}>{q.queue}</div>
+                    <div style={{ marginTop: 6 }}><StatusBadge status={q.status} /></div>
+                  </div>
+                </td>
                 <td style={{ padding: "12px", border: "1px solid #ddd" }}>{q.mrn}</td>
                 <td style={{ padding: "12px", border: "1px solid #ddd" }}>
                   <div style={{ marginBottom: "6px", fontSize: "13px" }}>
                     Tahap saat ini: <strong>{getStatusLabel(q.status)}</strong>
                   </div>
+                  <div style={{ marginBottom: 8 }}>
+                    <ProgressTracker status={q.status} />
+                  </div>
                   <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center", marginBottom: "6px" }}>
                     {(() => {
                       const nextStage = getNextStage(q.status);
-                      const isTerminal = q.status === "COMPLETED" || q.status === "CANCELLED";
+                      const isTerminal = q.status === "SELESAI" || q.status === "CANCELLED";
                       const isLoading =
                         updatingQueueId === q.id && updatingStatus === nextStage;
 
@@ -374,10 +384,10 @@ export default function AdminDashboard() {
                       let background = "#cce5ff";
                       let color = "#004085";
 
-                      if (nextStage === "COMPLETED") {
+                      if (nextStage === "SELESAI") {
                         background = "#d4edda";
                         color = "#155724";
-                      } else if (nextStage === "WAITING") {
+                      } else if (nextStage === "MENUNGGU") {
                         background = "#fff3cd";
                         color = "#856404";
                       }
@@ -409,7 +419,7 @@ export default function AdminDashboard() {
                       type="button"
                       onClick={() => updateQueueStatus(q.id, "CANCELLED")}
                       disabled={
-                        q.status === "COMPLETED" ||
+                        q.status === "SELESAI" ||
                         q.status === "CANCELLED" ||
                         updatingQueueId === q.id
                       }

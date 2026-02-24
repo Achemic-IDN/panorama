@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getStatusLabel } from "@/lib/status";
 import { getRoleLabel } from "@/lib/staffLabels";
+import StatusBadge from "@/lib/components/StatusBadge";
+import ProgressTracker from "@/lib/components/ProgressTracker";
 
 export default function StaffDashboardPage() {
   const router = useRouter();
@@ -199,44 +201,50 @@ export default function StaffDashboardPage() {
             {queues.length === 0 ? (
               <div style={{ color: "#666" }}>Tidak ada antrean pada stage ini.</div>
             ) : (
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead style={{ background: "#f8f9fa" }}>
-                  <tr>
-                    <th style={{ padding: "10px", border: "1px solid #ddd", textAlign: "left" }}>Nomor</th>
-                    <th style={{ padding: "10px", border: "1px solid #ddd", textAlign: "left" }}>MRN</th>
-                    <th style={{ padding: "10px", border: "1px solid #ddd", textAlign: "left" }}>Stage</th>
-                    <th style={{ padding: "10px", border: "1px solid #ddd", textAlign: "left" }}>Aksi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {queues.map((q, idx) => (
-                    <tr key={q.id} style={{ background: idx % 2 === 0 ? "#fff" : "#f8f9fa" }}>
-                      <td style={{ padding: "10px", border: "1px solid #ddd" }}>{q.queue}</td>
-                      <td style={{ padding: "10px", border: "1px solid #ddd" }}>{q.mrn}</td>
-                      <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                        <strong>{getStatusLabel(q.status)}</strong> <span style={{ color: "#666" }}>({q.status})</span>
-                      </td>
-                      <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                        <button
-                          type="button"
-                          onClick={() => advance(q.id)}
-                          disabled={updatingId === q.id}
-                          style={{
-                            padding: "8px 12px",
-                            borderRadius: "6px",
-                            border: "none",
-                            background: updatingId === q.id ? "#ccc" : "linear-gradient(135deg, #28a745 0%, #20c997 100%)",
-                            color: "white",
-                            cursor: updatingId === q.id ? "not-allowed" : "pointer",
-                          }}
-                        >
-                          {updatingId === q.id ? "Memproses..." : "Proses & Lanjut"}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 12 }}>
+                {queues.map((q) => (
+                  <div key={q.id} style={{
+                    padding: 16,
+                    borderRadius: 10,
+                    boxShadow: '0 6px 18px rgba(0,0,0,0.06)',
+                    background: '#fff',
+                    border: '1px solid rgba(0,0,0,0.03)'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+                      <div>
+                        <div style={{ fontSize: 40, fontWeight: 800, color: '#1e3a8a' }}>{q.queue}</div>
+                        <div style={{ color: '#666', marginTop: 6 }}>MRN: <strong>{q.mrn}</strong></div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <StatusBadge status={q.status} />
+                      </div>
+                    </div>
+
+                    <div style={{ marginTop: 12 }}>
+                      <ProgressTracker status={q.status} />
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 14 }}>
+                      <button
+                        type="button"
+                        onClick={() => advance(q.id)}
+                        disabled={updatingId === q.id}
+                        style={{
+                          padding: '10px 14px',
+                          borderRadius: 8,
+                          border: 'none',
+                          background: updatingId === q.id ? '#ccc' : 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+                          color: 'white',
+                          cursor: updatingId === q.id ? 'not-allowed' : 'pointer',
+                          fontWeight: 700
+                        }}
+                      >
+                        {updatingId === q.id ? 'Memproses...' : 'Proses'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         )}

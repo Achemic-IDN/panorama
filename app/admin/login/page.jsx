@@ -25,24 +25,11 @@ export default function LoginAdmin() {
       return;
     }
 
-    const roles = Array.isArray(json.data?.roles) ? json.data.roles : [];
-    if (roles.length > 1) {
-      // multiple roles (could include UTAMA)
-      router.push("/admin/select-role");
-    } else if (roles[0] === "UTAMA") {
-      router.push("/admin/dashboard");
-    } else if (roles.length === 1) {
-      // single non‑utama role: set active and go to staff
-      await fetch("/api/staff/set-role", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: roles[0] }),
-      });
-      router.push("/staff/dashboard");
-    } else {
-      // fallback
-      router.push("/admin/dashboard");
-    }
+    // regardless of how many roles the staff record contains, always
+    // take the user to the role selection screen so they make an explicit
+    // choice. the selector itself will be responsible for redirecting
+    // to the correct dashboard after a button is pressed.
+    router.push("/admin/select-role");
   }
 
   return (

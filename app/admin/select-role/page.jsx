@@ -65,13 +65,21 @@ export default function AdminSelectRolePage() {
       }}>
         <h2 style={{ marginBottom: "20px", color: "#333" }}>Pilih Role</h2>
         {error && <p style={{ color: "red" }}>{error}</p>}
+        <p style={{ fontSize: "0.9em", color: "#555" }}>
+          Tombol berwarna abu‑abu berarti Anda tidak punya role tersebut –
+          silakan login dengan akun yang sesuai atau hubungi admin.
+        </p>
         {ALL_ROLES.map((r) => {
           const available = roles.includes(r);
+          const label = getRoleLabel(r);
+          const displayText = available ? label : `${label} (login dulu)`;
+          const title = available ? undefined : "Silakan gunakan akun dengan role ini";
           return (
             <button
               key={r}
               onClick={() => available && choose(r)}
               disabled={!available}
+              title={title}
               style={{
                 width: "100%",
                 padding: "12px",
@@ -83,7 +91,7 @@ export default function AdminSelectRolePage() {
                 opacity: available ? 1 : 0.5,
               }}
             >
-              {getRoleLabel(r)}
+              {displayText}
             </button>
           );
         })}

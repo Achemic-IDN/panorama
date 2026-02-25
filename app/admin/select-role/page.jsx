@@ -8,6 +8,7 @@ export default function AdminSelectRolePage() {
   const router = useRouter();
   const [roles, setRoles] = useState([]);
   const [error, setError] = useState("");
+  const ALL_ROLES = ["UTAMA", "ENTRY", "TRANSPORT", "PACKAGING", "PENYERAHAN"];
 
   useEffect(() => {
     async function fetchRoles() {
@@ -64,23 +65,28 @@ export default function AdminSelectRolePage() {
       }}>
         <h2 style={{ marginBottom: "20px", color: "#333" }}>Pilih Role</h2>
         {error && <p style={{ color: "red" }}>{error}</p>}
-        {roles.map((r) => (
-          <button
-            key={r}
-            onClick={() => choose(r)}
-            style={{
-              width: "100%",
-              padding: "12px",
-              marginBottom: "15px",
-              border: "1px solid #ddd",
-              borderRadius: "5px",
-              fontSize: "16px",
-              cursor: "pointer"
-            }}
-          >
-            {getRoleLabel(r)}
-          </button>
-        ))}
+        {ALL_ROLES.map((r) => {
+          const available = roles.includes(r);
+          return (
+            <button
+              key={r}
+              onClick={() => available && choose(r)}
+              disabled={!available}
+              style={{
+                width: "100%",
+                padding: "12px",
+                marginBottom: "15px",
+                border: "1px solid #ddd",
+                borderRadius: "5px",
+                fontSize: "16px",
+                cursor: available ? "pointer" : "not-allowed",
+                opacity: available ? 1 : 0.5,
+              }}
+            >
+              {getRoleLabel(r)}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

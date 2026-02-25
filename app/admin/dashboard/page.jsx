@@ -6,6 +6,7 @@ import { getStatusLabel, isInProgressStatus } from "@/lib/status";
 import { getNextStage } from "@/lib/workflowConfig";
 import StatusBadge from "@/lib/components/StatusBadge";
 import ProgressTracker from "@/lib/components/ProgressTracker";
+import { getSocketClient } from "@/lib/socketClient";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -103,6 +104,68 @@ export default function AdminDashboard() {
 
     return () => {
       source.close();
+    };
+  }, [loading]);
+
+  // Realtime update antrean via WebSocket (Socket.io) + polling fallback
+  useEffect(() => {
+    if (loading) return;
+
+    const client = getSocketClient();
+    client.connect("UTAMA");
+
+    const upsertQueue = (updated) => {
+      if (!updated || !updated.id) return;
+      setQueues((prev) => {
+        const idx = prev.findIndex((q) => q.id === updated.id);
+        if (idx === -1) {
+          return [updated, ...prev];
+        }
+        const next = [...prev];
+        next[idx] = { ...next[idx], ...updated };
+        return next;
+      });
+    };
+
+    const offCreated = client.on("queue:created", (event) => {
+      const queue = event?.data || event;
+      if (!queue || !queue.id) return;
+      setQueues((prev) => {
+        if (prev.some((q) => q.id === queue.id)) return prev;
+        return [queue, ...prev];
+      });
+    });
+
+    const offUpdated = client.on("queue:updated", (event) => {
+      const queue = event?.data || event;
+      upsertQueue(queue);
+    });
+
+    const offMoved = client.on("queue:moved", (event) => {
+      const queue = event?.data || event;
+      upsertQueue(queue);
+    });
+
+    const offCompleted = client.on("queue:completed", (event) => {
+      const queue = event?.data || event;
+      upsertQueue(queue);
+    });
+
+    // Polling fallback (every 10 seconds) if websocket is unavailable
+    const offPolled = client.on("queue:polled", (payload) => {
+      const polled = payload?.queues;
+      if (Array.isArray(polled)) {
+        setQueues(polled);
+      }
+    });
+
+    return () => {
+      offCreated();
+      offUpdated();
+      offMoved();
+      offCompleted();
+      offPolled();
+      // Do not disconnect the singleton socket client here to allow reuse.
     };
   }, [loading]);
 

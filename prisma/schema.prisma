@@ -50,13 +50,40 @@ model Queue {
   queue     String      @unique
   mrn       String
   status    QueueStatus @default(MENUNGGU)
-  entryAt   DateTime?
-  transportAt DateTime?
-  packagingAt DateTime?
-  readyAt   DateTime?
-  completedAt DateTime?
+  
+  // Stage timestamps - when queue enters each stage
+  entryAt          DateTime?
+  transportAt      DateTime?
+  packagingAt      DateTime?
+  readyAt          DateTime?
+  completedAt      DateTime?
+  
+  // Detailed timestamps for time tracking
+  // Start times - when queue begins processing at each stage
+  entryStartAt          DateTime?
+  transportStartAt      DateTime?
+  packagingStartAt     DateTime?
+  penyerahanStartAt     DateTime?
+  
+  // End times - when queue finishes processing at each stage
+  entryEndAt          DateTime?
+  transportEndAt      DateTime?
+  packagingEndAt     DateTime?
+  penyerahanEndAt     DateTime?
+  
+  // Duration in seconds for each stage
+  durationEntry        Int?       // seconds spent in ENTRY stage
+  durationTransport   Int?       // seconds spent in TRANSPORT stage
+  durationPackaging   Int?       // seconds spent in PACKAGING stage
+  durationPenyerahan  Int?       // seconds spent in PENYERAHAN stage
+  durationTotal       Int?       // total seconds from MENUNGGU to SELESAI
+  
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
+
+  // relations to notification and audit log models
+  notifications PatientStageNotification[]
+  auditLogs      QueueAuditLog[]
 }
 
 model Feedback {
@@ -111,6 +138,9 @@ model Patient {
   phone        String?
   clinicOrigin String?  @map("clinic_origin")
 
+  // reverse relation for stage notifications
+  stageNotifications PatientStageNotification[]
+
   @@map("patients")
 }
 
@@ -122,6 +152,9 @@ model Staff {
   username     String       @unique
   passwordHash String       @map("password_hash")
   createdAt    DateTime     @default(now()) @map("created_at")
+
+  // reverse relation for audit logs
+  auditLogs     QueueAuditLog[]
 
   @@map("staff") // keep existing table name for backwards compatibility
 }
@@ -146,4 +179,40 @@ model Notification {
   createdAt DateTime  @default(now()) @map("created_at")
 
   @@map("notifications")
+}
+
+// Patient notifications for each stage transition (non-SMS, in-app history)
+model PatientStageNotification {
+  id        String     @id @default(cuid())
+  queueId   Int        @map("queue_id")
+  patientId Int?       @map("patient_id")
+  stage     QueueStatus
+  message   String
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  queue   Queue    @relation(fields: [queueId], references: [id])
+  patient Patient? @relation(fields: [patientId], references: [id])
+
+  @@index([queueId])
+  @@index([patientId])
+  @@map("patient_stage_notifications")
+}
+
+// Audit log for stage transitions and queue actions (separate from aggregate queue_logs)
+model QueueAuditLog {
+  id        String      @id @default(cuid())
+  queueId   Int         @map("queue_id")
+  staffId   Int?        @map("staff_id")
+  action    String
+  fromStage QueueStatus? @map("from_stage")
+  toStage   QueueStatus? @map("to_stage")
+  notes     String?
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  queue Queue  @relation(fields: [queueId], references: [id])
+  staff Staff? @relation(fields: [staffId], references: [id])
+
+  @@index([queueId])
+  @@index([staffId])
+  @@map("queue_audit_logs")
 }

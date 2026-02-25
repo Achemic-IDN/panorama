@@ -2,11 +2,10 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { PANORAMA_STATUSES } from "@/lib/status";
 import { updateQueueStage } from "@/lib/queueWorkflowService";
-import { broadcastQueueUpdate } from "@/lib/realtime";
-
-export const dynamic = 'force-dynamic';
-
+import { emitQueueMovedStage, emitQueueCompleted } from "@/lib/socketUtils";
 import { requireRole } from "@/lib/roleGuard";
+
+export const dynamic = "force-dynamic";
 
 async function verifyAuth(request) {
   const { ok } = await requireRole(request, "UTAMA");
@@ -40,6 +39,16 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: "Invalid queue ID" }, { status: 400 });
     }
 
+    const existingQueue = await prisma.queue.findUnique({
+      where: { id: queueId },
+    });
+
+    if (!existingQueue) {
+      return NextResponse.json({ error: "Queue not found" }, { status: 404 });
+    }
+
+    const previousStatus = existingQueue.status;
+
     let updatedQueue;
     try {
       updatedQueue = await updateQueueStage(queueId, status, null, null);
@@ -67,7 +76,11 @@ export async function PUT(request, { params }) {
     }
 
     try {
-      broadcastQueueUpdate(updatedQueue);
+      if (updatedQueue.status === "SELESAI") {
+        emitQueueCompleted(updatedQueue);
+      } else {
+        emitQueueMovedStage(updatedQueue, previousStatus);
+      }
     } catch (e) {
       console.error("Failed to broadcast queue update (admin):", e);
     }

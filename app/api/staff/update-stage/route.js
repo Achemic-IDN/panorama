@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { verifyStaff } from "@/lib/staffAuth";
 import { getNextStage } from "@/lib/workflowConfig";
 import { updateQueueStage } from "@/lib/queueWorkflowService";
-import { broadcastQueueUpdate } from "@/lib/realtime";
+import { emitQueueMovedStage, emitQueueCompleted } from "@/lib/socketUtils";
 
 export const dynamic = "force-dynamic";
 
@@ -63,6 +63,8 @@ export async function PUT(request) {
       return ApiResponse.conflict("Antrean sudah final (SELESAI/CANCELLED)");
     }
 
+    const previousStatus = queue.status;
+
     // use activeRole (from cookie or inferred) for permission checks
     const roleToUse = activeRole || (Array.isArray(staff.roles) ? staff.roles[0] : null);
     const targetStage = getTargetStageForRole(roleToUse, queue.status);
@@ -84,9 +86,13 @@ export async function PUT(request) {
       return ApiResponse.serverError("Gagal memperbarui stage antrean", { message: error?.message });
     }
 
-    // Broadcast ke semua listener realtime
+    // Broadcast ke semua listener realtime (SSE + WebSocket)
     try {
-      broadcastQueueUpdate(updated);
+      if (updated.status === "SELESAI") {
+        emitQueueCompleted(updated);
+      } else {
+        emitQueueMovedStage(updated, previousStatus);
+      }
     } catch (e) {
       console.error("Failed to broadcast queue update (staff):", e);
     }

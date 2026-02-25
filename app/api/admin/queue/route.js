@@ -1,11 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { logQueueCreated } from "@/lib/queueLogService";
-import { broadcastQueueUpdate } from "@/lib/realtime";
-
-export const dynamic = 'force-dynamic';
-
+import { emitQueueCreated } from "@/lib/socketUtils";
 import { requireRole } from "@/lib/roleGuard";
+
+export const dynamic = "force-dynamic";
 
 // we no longer use simple auth cookie – staff with UTAMA role are considered admin
 async function verifyAuth(request) {
@@ -67,9 +66,9 @@ export async function POST(request) {
       console.error("Failed to log queue creation:", logError);
     }
 
-    // Broadcast antrean baru
+    // Broadcast antrean baru (SSE + WebSocket)
     try {
-      broadcastQueueUpdate(newQueue);
+      emitQueueCreated(newQueue);
     } catch (e) {
       console.error("Failed to broadcast new queue:", e);
     }

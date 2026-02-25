@@ -6,6 +6,7 @@ import { getStatusLabel } from "@/lib/status";
 import { getRoleLabel } from "@/lib/staffLabels";
 import StatusBadge from "@/lib/components/StatusBadge";
 import ProgressTracker from "@/lib/components/ProgressTracker";
+import { getSocketClient } from "@/lib/socketClient";
 
 export default function StaffDashboardPage() {
   const router = useRouter();
@@ -16,6 +17,8 @@ export default function StaffDashboardPage() {
   const [queues, setQueues] = useState([]);
   const [updatingId, setUpdatingId] = useState(null);
   const [loggingOut, setLoggingOut] = useState(false);
+   const [stats, setStats] = useState(null);
+   const [statsError, setStatsError] = useState("");
 
   const title = useMemo(() => {
     if (!activeRole) return "Dashboard Staff";
@@ -54,6 +57,42 @@ export default function StaffDashboardPage() {
     loadQueues();
   }, []);
 
+  // Admin UTAMA monitoring stats (today) - polled every 10s
+  useEffect(() => {
+    if (activeRole !== "UTAMA") return;
+
+    let cancelled = false;
+
+    async function loadStats() {
+      try {
+        const res = await fetch("/api/admin/queue-stats", { cache: "no-store" });
+        const json = await res.json();
+        if (!res.ok || json?.error) {
+          if (!cancelled) {
+            setStatsError(json?.error || "Gagal mengambil statistik antrean");
+          }
+          return;
+        }
+        if (!cancelled) {
+          setStats(json);
+          setStatsError("");
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setStatsError("Gagal mengambil statistik antrean");
+        }
+      }
+    }
+
+    loadStats();
+    const intervalId = setInterval(loadStats, 10000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+    };
+  }, [activeRole]);
+
   // Realtime update antrean untuk staff via SSE
   useEffect(() => {
     const source = new EventSource("/api/realtime/queue");
@@ -89,6 +128,49 @@ export default function StaffDashboardPage() {
       source.close();
     };
   }, [staff]);
+
+  // Realtime update antrean via WebSocket (Socket.io) + polling fallback
+  useEffect(() => {
+    if (!staff || !activeRole) return;
+
+    const client = getSocketClient();
+    client.connect(activeRole);
+
+    const updateIfPresent = (updated) => {
+      if (!updated || !updated.id) return;
+      setQueues((prev) => {
+        const idx = prev.findIndex((q) => q.id === updated.id);
+        if (idx === -1) {
+          return prev;
+        }
+        const next = [...prev];
+        next[idx] = { ...next[idx], ...updated };
+        return next;
+      });
+    };
+
+    const offUpdated = client.on("queue:updated", (event) => {
+      const queue = event?.data || event;
+      updateIfPresent(queue);
+    });
+
+    const offMoved = client.on("queue:moved", (event) => {
+      const queue = event?.data || event;
+      updateIfPresent(queue);
+    });
+
+    const offCompleted = client.on("queue:completed", (event) => {
+      const queue = event?.data || event;
+      updateIfPresent(queue);
+    });
+
+    return () => {
+      offUpdated();
+      offMoved();
+      offCompleted();
+      // Do not disconnect the singleton socket client here to allow reuse.
+    };
+  }, [staff, activeRole]);
 
   async function advance(queueId) {
     setUpdatingId(queueId);
@@ -186,8 +268,91 @@ export default function StaffDashboardPage() {
           </div>
         )}
 
+        {activeRole === "UTAMA" && stats && (
+          <section
+            style={{
+              marginTop: "16px",
+              marginBottom: "8px",
+              padding: "16px",
+              borderRadius: "8px",
+              background: "#f8f9fa",
+              border: "1px solid #e9ecef",
+            }}
+          >
+            <h2 style={{ marginTop: 0, marginBottom: "10px", fontSize: "16px", color: "#1e3a8a" }}>
+              Monitoring Antrean Hari Ini
+            </h2>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
+              <div style={{ flex: "1 1 140px", minWidth: "140px" }}>
+                <div style={{ fontSize: "12px", color: "#666" }}>Total Antrian Hari Ini</div>
+                <div style={{ fontSize: "22px", fontWeight: 700, color: "#3685fc" }}>{stats.totalHariIni}</div>
+              </div>
+              <div style={{ flex: "1 1 140px", minWidth: "140px" }}>
+                <div style={{ fontSize: "12px", color: "#666" }}>Sedang Diproses</div>
+                <div style={{ fontSize: "22px", fontWeight: 700, color: "#0c5460" }}>{stats.sedangDiproses}</div>
+              </div>
+              <div style={{ flex: "1 1 140px", minWidth: "140px" }}>
+                <div style={{ fontSize: "12px", color: "#666" }}>Selesai</div>
+                <div style={{ fontSize: "22px", fontWeight: 700, color: "#155724" }}>{stats.selesai}</div>
+              </div>
+              <div style={{ flex: "1 1 160px", minWidth: "160px" }}>
+                <div style={{ fontSize: "12px", color: "#666" }}>Rata-rata Waktu Entry</div>
+                <div style={{ fontSize: "14px", fontWeight: 600 }}>
+                  {stats.avgEntry != null
+                    ? `${Math.floor(stats.avgEntry / 60)}m ${stats.avgEntry % 60}s`
+                    : "-"}
+                </div>
+              </div>
+              <div style={{ flex: "1 1 160px", minWidth: "160px" }}>
+                <div style={{ fontSize: "12px", color: "#666" }}>Rata-rata Waktu Packaging</div>
+                <div style={{ fontSize: "14px", fontWeight: 600 }}>
+                  {stats.avgPackaging != null
+                    ? `${Math.floor(stats.avgPackaging / 60)}m ${stats.avgPackaging % 60}s`
+                    : "-"}
+                </div>
+              </div>
+              <div style={{ flex: "1 1 160px", minWidth: "160px" }}>
+                <div style={{ fontSize: "12px", color: "#666" }}>Rata-rata Total Pelayanan</div>
+                <div style={{ fontSize: "14px", fontWeight: 600 }}>
+                  {stats.avgTotal != null
+                    ? `${Math.floor(stats.avgTotal / 60)}m ${stats.avgTotal % 60}s`
+                    : "-"}
+                </div>
+              </div>
+            </div>
+            {stats.generatedAt && (
+              <div style={{ marginTop: "6px", fontSize: "11px", color: "#868e96" }}>
+                Diperbarui: {new Date(stats.generatedAt).toLocaleTimeString()}
+              </div>
+            )}
+          </section>
+        )}
+
+        {statsError && activeRole === "UTAMA" && (
+          <div
+            style={{
+              marginTop: "8px",
+              background: "#fff3cd",
+              color: "#856404",
+              padding: "8px 10px",
+              borderRadius: "6px",
+              fontSize: "13px",
+            }}
+          >
+            {statsError}
+          </div>
+        )}
+
         {error && (
-          <div style={{ marginTop: "16px", background: "#f8d7da", color: "#721c24", padding: "10px 12px", borderRadius: "6px" }}>
+          <div
+            style={{
+              marginTop: "16px",
+              background: "#f8d7da",
+              color: "#721c24",
+              padding: "10px 12px",
+              borderRadius: "6px",
+            }}
+          >
             {error}
           </div>
         )}

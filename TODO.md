@@ -1,29 +1,119 @@
-# TODO: Implement Patient Login Feature for PANORAMA
+# PANORAMA Realtime Queue System - Implementation Plan
 
-## Database Schema
-- [x] Add PatientLogin model to prisma/schema.prisma
+## Current State Analysis
 
-## API Updates
-- [x] Update app/api/auth/login/route.js for MRN validation and database saving
-- [x] Create app/api/admin/patient-login/route.js for CRUD operations
+### Existing Architecture:
+- **Database**: Prisma with PostgreSQL, Queue model has basic timestamps
+- **Realtime**: SSE (Server-Sent Events) via `/api/realtime/queue`
+- **Workflow**: Stage transitions via `queueWorkflowService.js`
+- **Frontend**: Admin & Staff dashboards with SSE polling
 
-## Frontend Updates
-- [x] Update app/login/page.jsx for MRN validation, auto-capitalization, and error display
-- [x] Update app/admin/dashboard/page.jsx to add patient login table with dummy data, add new, and delete all functions
+### What's Missing:
+1. Detailed stage timestamps (start/end for each stage)
+2. Duration tracking for each stage
+3. WebSocket implementation (Socket.io)
+4. Role-based room subscriptions
+5. Live timer display on frontend
+6. Admin UTAMA monitoring stats with averages
+7. Proper event types (QUEUE_CREATED, QUEUE_UPDATED, QUEUE_MOVED_STAGE, QUEUE_COMPLETED)
 
-## Database Migration
-- [x] Run prisma generate and migrate
+---
 
-## Testing
-- [x] Test MRN validation, auto-capitalization, error display - UPDATED: Now accepts numbers only (max 8 chars, required)
-- [x] Test data saving to database - PASSED: Patient login API saves data correctly
-- [x] Test admin dashboard updates with patient logins - PASSED: Admin dashboard displays patient logins
-- [x] Test add new patient login without duplicate No urut - PASSED: API prevents duplicates
-- [x] Test delete all patient logins function - PASSED: Delete all function works
-- [x] Test dashboard history loading - FIXED: Updated dashboard to load from patient-login API
-- [x] Test updated MRN validation (numbers only) - PASSED: API accepts numeric MRN correctly
+## Implementation Tasks
 
-## Known Issues
-- [x] CRITICAL: PatientLogin table not created in database despite schema updates - RESOLVED: Switched to JSON file storage
-- [x] Database migration/push commands not working properly - RESOLVED: Using JSON storage instead
-- [x] Need to resolve Prisma client generation and database sync issues - RESOLVED: Using JSON storage instead
+### Phase 1: Database Schema Updates
+- [ ] 1.1 Update `prisma/schema.prisma` with new timestamp fields
+  - Add entryStartAt, entryEndAt
+  - Add transportStartAt, transportEndAt
+  - Add packagingStartAt, packagingEndAt
+  - Add penyerahanStartAt, penyerahanEndAt
+  - Add durationEntry, durationTransport, durationPackaging, durationPenyerahan, durationTotal
+
+### Phase 2: WebSocket Server Setup
+- [ ] 2.1 Install socket.io and socket.io-client
+- [ ] 2.2 Create WebSocket server instance (`lib/socketServer.js`)
+- [ ] 2.3 Implement room-based subscriptions per role
+- [ ] 2.4 Add event types: QUEUE_CREATED, QUEUE_UPDATED, QUEUE_MOVED_STAGE, QUEUE_COMPLETED
+
+### Phase 3: Queue Workflow Service Updates
+- [ ] 3.1 Update `lib/queueWorkflowService.js`
+  - Add start timestamp when entering a stage
+  - Add end timestamp when finishing a stage
+  - Calculate duration for each stage
+  - Calculate total duration when completed
+
+### Phase 4: Realtime Broadcast Updates
+- [ ] 4.1 Create `lib/socketUtils.js` for socket broadcasting
+- [ ] 4.2 Update API routes to emit socket events
+- [ ] 4.3 Add fallback polling mechanism
+
+### Phase 5: Frontend Updates - Socket Client
+- [ ] 5.1 Create `lib/socketClient.js` for client-side socket connection
+- [ ] 5.2 Implement auto-reconnection logic
+- [ ] 5.3 Add fallback to polling every 10 seconds
+
+### Phase 6: Frontend Updates - Admin Dashboard
+- [ ] 6.1 Update `app/admin/dashboard/page.jsx`
+  - Integrate socket client
+  - Add live timer display
+  - Add stage duration display
+
+### Phase 7: Frontend Updates - Staff Dashboard
+- [ ] 7.1 Update `app/staff/dashboard/page.jsx`
+  - Integrate socket client with role subscription
+  - Add live timer display
+
+### Phase 8: Frontend Updates - Patient Dashboard
+- [ ] 8.1 Update `app/dashboard/page.jsx`
+  - Keep existing functionality
+  - Integrate socket client for status updates
+
+### Phase 9: Live Timer Component
+- [ ] 9.1 Create `lib/components/LiveTimer.jsx`
+- [ ] 9.2 Create `lib/components/QueueCard.jsx` with timer display
+- [ ] 9.3 Add status badge colors as specified
+
+### Phase 10: Admin UTAMA Monitoring
+- [ ] 10.1 Create stats API endpoint
+- [ ] 10.2 Add monitoring dashboard with:
+  - Total Antrian Hari Ini
+  - Sedang Diproses
+  - Selesai
+  - Rata-rata Waktu Entry
+  - Rata-rata Waktu Packaging
+  - Rata-rata Total Pelayanan
+
+### Phase 11: Security & Role Guards
+- [ ] 11.1 Ensure only authorized roles can update their stage
+- [ ] 11.2 Add middleware for socket authentication
+
+---
+
+## Technical Details
+
+### Status Badge Colors:
+- MENUNGGU = gray
+- ENTRY = blue
+- TRANSPORT = purple
+- PACKAGING = orange
+- PENYERAHAN = teal
+- SELESAI = green
+
+### Queue Workflow:
+```
+MENUNGGU → ENTRY → TRANSPORT → PACKAGING → PENYERAHAN → SELESAI
+```
+
+### WebSocket Events:
+- `QUEUE_CREATED` - New queue created
+- `QUEUE_UPDATED` - Queue data updated
+- `QUEUE_MOVED_STAGE` - Queue moved to next stage
+- `QUEUE_COMPLETED` - Queue finished (SELESAI)
+
+### Rooms:
+- `admin:UTAMA` - All queues
+- `admin:ENTRY` - ENTRY stage queues
+- `admin:TRANSPORT` - TRANSPORT stage queues
+- `admin:PACKAGING` - PACKAGING stage queues
+- `admin:PENYERAHAN` - PENYERAHAN stage queues
+- `patient:{queueNumber}` - Individual patient updates

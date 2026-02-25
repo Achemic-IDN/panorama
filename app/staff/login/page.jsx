@@ -26,13 +26,9 @@ export default function StaffLoginPage() {
         return;
       }
 
-      // If multiple roles are returned ask user to select
-      if (json.data && Array.isArray(json.data.roles) && json.data.roles.length > 1) {
-        router.push("/staff/select-role");
-      } else {
-        // already set by server when single role
-        router.push("/staff/dashboard");
-      }
+      // always take user to role selector; it will handle single-role
+      // cases by immediately redirecting them on button press.
+      router.push("/staff/select-role");
     } catch (e) {
       setError("Terjadi kesalahan saat login");
     } finally {

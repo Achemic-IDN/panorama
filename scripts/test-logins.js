@@ -3,7 +3,6 @@ const users = [
   { endpoint: '/api/staff/login', body: { username: 'transport', password: 'transport123' } },
   { endpoint: '/api/staff/login', body: { username: 'packaging', password: 'pack123' } },
   { endpoint: '/api/staff/login', body: { username: 'penyerahan', password: 'pen123' } },
-  { endpoint: '/api/staff/login', body: { username: 'multi', password: 'multi123' } },
   { endpoint: '/api/auth/login', body: { role: 'admin', username: 'admin', password: 'admin123' } },
 ];
 

@@ -61,13 +61,7 @@ async function main() {
     roles: ["PENYERAHAN"],
   });
 
-  // example user with multiple roles (entry + transport) for testing role selection screen
-  await upsertStaff({
-    name: "Multi‑role User",
-    username: "multi",
-    password: "multi123",
-    roles: ["ENTRY", "TRANSPORT"],
-  });
+  // (the previous multi‑role demo account has been removed to avoid confusion)
 }
 
 main()

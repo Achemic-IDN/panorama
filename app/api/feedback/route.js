@@ -12,7 +12,9 @@ let inMemoryFeedback = [];
 function readFeedbackData() {
   try {
     const data = fs.readFileSync(feedbackFilePath, "utf8");
-    const parsed = JSON.parse(data);
+    // use safe parser to handle stray unicode escapes
+    const { safeJsonParse } = require("@/lib/jsonUtils");
+    const parsed = safeJsonParse(data) || [];
     inMemoryFeedback = parsed;
     return parsed;
   } catch (err) {

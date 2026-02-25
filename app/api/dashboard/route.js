@@ -10,7 +10,14 @@ export async function GET() {
     return new NextResponse("Unauthorized", { status: 401 });
   }
 
-  const parsed = JSON.parse(auth.value);
+  let parsed;
+  try {
+    parsed = JSON.parse(auth.value);
+  } catch (err) {
+    console.error("Failed to parse auth cookie in /api/dashboard:", err, "value=", auth.value);
+    // fallback to blank object so response still returns something
+    parsed = {};
+  }
 
   return NextResponse.json({
     queue: parsed.queue,

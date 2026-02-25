@@ -25,11 +25,19 @@ export default function LoginAdmin() {
       return;
     }
 
-    // regardless of how many roles the staff record contains, always
-    // take the user to the role selection screen so they make an explicit
-    // choice. the selector itself will be responsible for redirecting
-    // to the correct dashboard after a button is pressed.
-    router.push("/admin/select-role");
+    // if our admin account happened to have exactly one station role
+    // (ENTRY, TRANSPORT, PACKAGING, PENYERAHAN) and no UTAMA, there is
+    // no need to force them through the selector – just take them
+    // straight to the staff dashboard. otherwise fall back to the
+    // normal behaviour of showing the selector.
+    const roles = Array.isArray(json.data?.roles) ? json.data.roles : [];
+    if (roles.length === 1 && roles[0] !== "UTAMA") {
+      // server already set staff_role cookie when there was only one
+      // role, so we can just navigate
+      router.push("/staff/dashboard");
+    } else {
+      router.push("/admin/select-role");
+    }
   }
 
   return (

@@ -1,5 +1,7 @@
 import ApiResponse from "@/lib/apiResponse";
 import { prisma } from "@/lib/prisma";
+import { createCsrfToken } from "@/lib/csrf";
+import { createSession } from "@/lib/sessionService";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 
@@ -40,12 +42,13 @@ export async function POST(request) {
       timestamp: new Date().toISOString(),
     });
 
+    const maxAge = parseInt(process.env.SESSION_MAX_AGE_SECONDS || "43200", 10); // default 12h
     res.cookies.set("staff_id", String(staff.id), {
       httpOnly: true,
       secure: true,
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 12, // 12 jam
+      maxAge,
     });
 
     // if there is only one role we can set the active cookie immediately
@@ -55,9 +58,42 @@ export async function POST(request) {
         secure: true,
         sameSite: "lax",
         path: "/",
-        maxAge: 60 * 60 * 12,
+        maxAge,
       });
     }
+
+    // set birthdate for sliding expiration
+    res.cookies.set("session_birthdate", new Date().toISOString(), {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge,
+    });
+
+    // create DB session record
+    try {
+      const sess = await createSession(staff.id, maxAge);
+      res.cookies.set("session_id", sess.id, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "lax",
+        path: "/",
+        maxAge,
+      });
+    } catch (e) {
+      console.error("Failed to create session record:", e);
+    }
+
+    // generate csrf token for subsequent form submissions
+    const csrfToken = createCsrfToken();
+    res.cookies.set("csrf_token", csrfToken, {
+      httpOnly: false,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge,
+    });
 
     return res;
   } catch (error) {

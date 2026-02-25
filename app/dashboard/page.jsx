@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { getStatusLabel, isInProgressStatus } from "@/lib/status";
+import { getSocketClient } from "@/lib/socketClient";
+import { csrfFetch } from "@/lib/utils";
 
 export default function DashboardPage() {
   const [message, setMessage] = useState("");
@@ -124,6 +126,25 @@ export default function DashboardPage() {
     };
   }, [patientData?.nomorAntrean, patientData?.nomorRekamMedis]);
 
+  // socket.io notifications for patient (fallback/polling handled internally)
+  useEffect(() => {
+    if (!patientData?.nomorAntrean) return;
+    const client = getSocketClient();
+    client.connect("patient", patientData.nomorAntrean);
+
+    const offNotif = client.on("patient:notification", (evt) => {
+      const data = evt?.data || evt;
+      if (data && data.message) {
+        setStatusChangeMessage(data.message);
+        setTimeout(() => setStatusChangeMessage(""), 5000);
+      }
+    });
+
+    return () => {
+      offNotif();
+    };
+  }, [patientData?.nomorAntrean]);
+
   async function submitFeedback() {
     if (!patientData) {
       setError("Patient data not available");
@@ -133,7 +154,7 @@ export default function DashboardPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/feedback", {
+      const res = await csrfFetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

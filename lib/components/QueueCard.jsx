@@ -3,6 +3,7 @@
 import StatusBadge from "./StatusBadge";
 import ProgressTracker from "./ProgressTracker";
 import { StageTimer, TotalTimer } from "./LiveTimer";
+import { escapeHtml } from "@/lib/utils";
 
 /**
  * QueueCard - Displays queue information with live timers
@@ -35,8 +36,8 @@ export default function QueueCard({
       {/* Header: Queue Number and Status */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
         <div>
-          <div style={{ fontSize: 40, fontWeight: 800, color: '#1e3a8a' }}>{queue.queue}</div>
-          <div style={{ color: '#666', marginTop: 6 }}>MRN: <strong>{queue.mrn}</strong></div>
+          <div style={{ fontSize: 40, fontWeight: 800, color: '#1e3a8a' }}>{escapeHtml(queue.queue)}</div>
+          <div style={{ color: '#666', marginTop: 6 }}>MRN: <strong>{escapeHtml(queue.mrn)}</strong></div>
         </div>
         <div style={{ textAlign: 'right' }}>
           <StatusBadge status={queue.status} />

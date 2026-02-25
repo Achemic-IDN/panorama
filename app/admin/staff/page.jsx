@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { csrfFetch } from "@/lib/utils";
 
 const ROLE_OPTIONS = [
   { value: "ENTRY", label: "ENTRY (Entri Resep)" },
@@ -53,7 +54,7 @@ export default function AdminStaffPage() {
     setCreating(true);
     setError("");
     try {
-      const res = await fetch("/api/admin/staff", {
+      const res = await csrfFetch("/api/admin/staff", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, username, password, role }),

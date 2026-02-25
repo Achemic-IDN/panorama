@@ -22,17 +22,43 @@ export async function GET(request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get start of today
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // parse optional date range filters
+    const dateFromParam = searchParams.get("dateFrom");
+    const dateToParam = searchParams.get("dateTo");
 
-    // Get queues created today
+    let rangeFrom;
+    let rangeTo;
+    if (dateFromParam) {
+      const d = new Date(dateFromParam);
+      if (!isNaN(d.getTime())) {
+        rangeFrom = d;
+      }
+    }
+    if (dateToParam) {
+      const d = new Date(dateToParam);
+      if (!isNaN(d.getTime())) {
+        // make inclusive by adding one day minus epsilon
+        rangeTo = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+      }
+    }
+
+    // default to today if no range provided
+    if (!rangeFrom && !rangeTo) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      rangeFrom = today;
+      rangeTo = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+    }
+
+    const whereClause = {};
+    if (rangeFrom || rangeTo) {
+      whereClause.createdAt = {};
+      if (rangeFrom) whereClause.createdAt.gte = rangeFrom;
+      if (rangeTo) whereClause.createdAt.lte = rangeTo;
+    }
+
     const todayQueues = await prisma.queue.findMany({
-      where: {
-        createdAt: {
-          gte: today,
-        },
-      },
+      where: whereClause,
     });
 
     // Calculate statistics

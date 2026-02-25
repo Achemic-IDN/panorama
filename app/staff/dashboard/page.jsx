@@ -7,6 +7,7 @@ import { getRoleLabel } from "@/lib/staffLabels";
 import StatusBadge from "@/lib/components/StatusBadge";
 import ProgressTracker from "@/lib/components/ProgressTracker";
 import { getSocketClient } from "@/lib/socketClient";
+import { escapeHtml, csrfFetch } from "@/lib/utils";
 
 export default function StaffDashboardPage() {
   const router = useRouter();
@@ -19,6 +20,9 @@ export default function StaffDashboardPage() {
   const [loggingOut, setLoggingOut] = useState(false);
    const [stats, setStats] = useState(null);
    const [statsError, setStatsError] = useState("");
+   const [notificationMessage, setNotificationMessage] = useState("");
+   const [dateFromFilter, setDateFromFilter] = useState("");
+   const [dateToFilter, setDateToFilter] = useState("");
 
   const title = useMemo(() => {
     if (!activeRole) return "Dashboard Staff";
@@ -198,13 +202,44 @@ export default function StaffDashboardPage() {
     setLoggingOut(true);
     setError("");
     try {
-      await fetch("/api/staff/logout", { method: "POST" });
+      await csrfFetch("/api/staff/logout", { method: "POST" });
     } catch (e) {
       // ignore
     } finally {
       router.push("/staff/login");
       setLoggingOut(false);
     }
+  }
+
+  // helpers for stats/export (UTAMA only or generic)
+  async function fetchStats() {
+    try {
+      const params = new URLSearchParams();
+      if (dateFromFilter) params.set('dateFrom', dateFromFilter);
+      if (dateToFilter) params.set('dateTo', dateToFilter);
+      const res = await fetch(`/api/admin/queue-stats?${params.toString()}`, { cache: 'no-store' });
+      const statJson = await res.json();
+      if (!res.ok) {
+        throw new Error(statJson.error || 'Stats fetch failed');
+      }
+      setStats(statJson);
+      setStatsError(null);
+    } catch (e) {
+      setStatsError(e.message);
+    }
+  }
+
+  function exportQueues() {
+    try {
+      import('@/lib/exportUtils').then((m) => m.exportToCSV(queues, 'queues_export.csv'));
+    } catch {}
+  }
+
+  function exportStats() {
+    if (!stats) return;
+    try {
+      import('@/lib/exportUtils').then((m) => m.exportToJSON(stats, 'stats.json'));
+    } catch {}
   }
 
   return (
@@ -258,6 +293,36 @@ export default function StaffDashboardPage() {
             >
               {loggingOut ? "Keluar..." : "Logout"}
             </button>
+            <button
+              type="button"
+              onClick={exportQueues}
+              style={{
+                padding: "8px 12px",
+                borderRadius: "6px",
+                border: "1px solid #17a2b8",
+                background: "#17a2b8",
+                color: "white",
+                cursor: "pointer",
+              }}
+            >
+              Export Queues
+            </button>
+            {activeRole === "UTAMA" && (
+              <button
+                type="button"
+                onClick={() => router.push("/admin/audit-logs")}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: "6px",
+                  border: "1px solid #ffc107",
+                  background: "#ffc107",
+                  color: "#343a40",
+                  cursor: "pointer",
+                }}
+              >
+                Audit Logs
+              </button>
+            )}
           </div>
         </div>
 
@@ -266,8 +331,11 @@ export default function StaffDashboardPage() {
             Login sebagai <strong>{staff.name}</strong> ({staff.username}) — Role:{" "}
             <strong>{getRoleLabel(activeRole)}</strong>
           </div>
+        )}        {notificationMessage && (
+          <div style={{ marginTop: "10px", background: "#d1ecf1", color: "#0c5460", padding: "8px", borderRadius: "6px" }}>
+            {escapeHtml(notificationMessage)}
+          </div>
         )}
-
         {activeRole === "UTAMA" && stats && (
           <section
             style={{
@@ -282,6 +350,40 @@ export default function StaffDashboardPage() {
             <h2 style={{ marginTop: 0, marginBottom: "10px", fontSize: "16px", color: "#1e3a8a" }}>
               Monitoring Antrean Hari Ini
             </h2>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "8px", alignItems: "center" }}>
+              <label style={{ fontSize: "14px" }}>
+                Dari:
+                <input
+                  type="date"
+                  value={dateFromFilter}
+                  onChange={(e) => setDateFromFilter(e.target.value)}
+                  style={{ marginLeft: "4px" }}
+                />
+              </label>
+              <label style={{ fontSize: "14px" }}>
+                Sampai:
+                <input
+                  type="date"
+                  value={dateToFilter}
+                  onChange={(e) => setDateToFilter(e.target.value)}
+                  style={{ marginLeft: "4px" }}
+                />
+              </label>
+              <button
+                type="button"
+                onClick={fetchStats}
+                style={{ padding: "6px 12px" }}
+              >
+                Tampilkan
+              </button>
+              <button
+                type="button"
+                onClick={exportStats}
+                style={{ padding: "6px 12px" }}
+              >
+                Export Stats
+              </button>
+            </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
               <div style={{ flex: "1 1 140px", minWidth: "140px" }}>
                 <div style={{ fontSize: "12px", color: "#666" }}>Total Antrian Hari Ini</div>
@@ -377,8 +479,8 @@ export default function StaffDashboardPage() {
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
                       <div>
-                        <div style={{ fontSize: 40, fontWeight: 800, color: '#1e3a8a' }}>{q.queue}</div>
-                        <div style={{ color: '#666', marginTop: 6 }}>MRN: <strong>{q.mrn}</strong></div>
+                        <div style={{ fontSize: 40, fontWeight: 800, color: '#1e3a8a' }}>{escapeHtml(q.queue)}</div>
+                        <div style={{ color: '#666', marginTop: 6 }}>MRN: <strong>{escapeHtml(q.mrn)}</strong></div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
                         <StatusBadge status={q.status} />

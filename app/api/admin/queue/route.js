@@ -8,15 +8,17 @@ export const dynamic = "force-dynamic";
 
 // we no longer use simple auth cookie – staff with UTAMA role are considered admin
 async function verifyAuth(request) {
-  const { ok, staff, activeRole, response } = await requireRole(request, "UTAMA");
-  return ok;
+  // allow any authenticated staff to manage queues; the workflow service
+  // itself enforces stage‑specific permissions via `isValidTransition`.
+  const { ok, staff, activeRole, response } = await requireRole(request, []);
+  return { ok, staff, activeRole, response };
 }
 
 export async function GET(request) {
   try {
-    const isAdmin = await verifyAuth(request);
-    if (!isAdmin) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const auth = await verifyAuth(request);
+    if (!auth.ok) {
+      return auth.response || NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const queues = await prisma.queue.findMany({
@@ -31,10 +33,11 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const isAdmin = await verifyAuth(request);
-    if (!isAdmin) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const auth = await verifyAuth(request);
+    if (!auth.ok) {
+      return auth.response || NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const { staff } = auth;
 
     const body = await request.json();
     const { queue, mrn } = body;
@@ -56,7 +59,8 @@ export async function POST(request) {
       data: { queue, mrn },
     });
 
-    // Log initial queue creation as WAITING in QueueLog
+    // Log initial queue creation as WAITING in QueueLog (aggregate) and
+    // add audit entry recording who created it.
     try {
       await logQueueCreated({
         queueNumber: newQueue.queue,
@@ -64,6 +68,19 @@ export async function POST(request) {
       });
     } catch (logError) {
       console.error("Failed to log queue creation:", logError);
+    }
+
+    try {
+      // create audit log row; staff may be null in some contexts
+      await import("@/lib/auditLogUtils").then((m) =>
+        m.createQueueLog({
+          queueId: newQueue.id,
+          staffId: staff?.id ?? null,
+          action: "CREATE_QUEUE",
+        })
+      );
+    } catch (auditError) {
+      console.error("Failed to create audit log for queue creation:", auditError);
     }
 
     // Broadcast antrean baru (SSE + WebSocket)

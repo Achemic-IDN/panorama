@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getRoleLabel } from "@/lib/staffLabels"; // we'll create helper
+import { csrfFetch } from "@/lib/utils";
 
 export default function SelectRolePage() {
   const router = useRouter();
@@ -31,7 +32,7 @@ export default function SelectRolePage() {
   async function choose(role) {
     // set cookie via endpoint or client side
     try {
-      await fetch("/api/staff/set-role", {
+      await csrfFetch("/api/staff/set-role", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ role }),

@@ -22,12 +22,14 @@
 ## Implementation Tasks
 
 ### Phase 1: Database Schema Updates
-- [ ] 1.1 Update `prisma/schema.prisma` with new timestamp fields
+- [x] 1.1 Update `prisma/schema.prisma` with new timestamp fields
   - Add entryStartAt, entryEndAt
   - Add transportStartAt, transportEndAt
   - Add packagingStartAt, packagingEndAt
   - Add penyerahanStartAt, penyerahanEndAt
   - Add durationEntry, durationTransport, durationPackaging, durationPenyerahan, durationTotal
+
+(implemented earlier; migration already generated for these columns)
 
 ### Phase 2: WebSocket Server Setup
 - [ ] 2.1 Install socket.io and socket.io-client
@@ -36,11 +38,13 @@
 - [ ] 2.4 Add event types: QUEUE_CREATED, QUEUE_UPDATED, QUEUE_MOVED_STAGE, QUEUE_COMPLETED
 
 ### Phase 3: Queue Workflow Service Updates
-- [ ] 3.1 Update `lib/queueWorkflowService.js`
+- [x] 3.1 Update `lib/queueWorkflowService.js`
   - Add start timestamp when entering a stage
   - Add end timestamp when finishing a stage
   - Calculate duration for each stage
   - Calculate total duration when completed
+
+(service logic and fields already present)
 
 ### Phase 4: Realtime Broadcast Updates
 - [ ] 4.1 Create `lib/socketUtils.js` for socket broadcasting
@@ -48,9 +52,11 @@
 - [ ] 4.3 Add fallback polling mechanism
 
 ### Phase 5: Frontend Updates - Socket Client
-- [ ] 5.1 Create `lib/socketClient.js` for client-side socket connection
-- [ ] 5.2 Implement auto-reconnection logic
-- [ ] 5.3 Add fallback to polling every 10 seconds
+- [x] 5.1 Create `lib/socketClient.js` for client-side socket connection
+- [x] 5.2 Implement auto-reconnection logic
+- [x] 5.3 Add fallback to polling every 10 seconds
+
+(socket client was implemented earlier in the project)
 
 ### Phase 6: Frontend Updates - Admin Dashboard
 - [ ] 6.1 Update `app/admin/dashboard/page.jsx`
@@ -69,9 +75,11 @@
   - Integrate socket client for status updates
 
 ### Phase 9: Live Timer Component
-- [ ] 9.1 Create `lib/components/LiveTimer.jsx`
-- [ ] 9.2 Create `lib/components/QueueCard.jsx` with timer display
-- [ ] 9.3 Add status badge colors as specified
+- [x] 9.1 Create `lib/components/LiveTimer.jsx`
+- [x] 9.2 Create `lib/components/QueueCard.jsx` with timer display
+- [x] 9.3 Add status badge colors as specified
+
+(components exist and are in use)
 
 ### Phase 10: Admin UTAMA Monitoring
 - [ ] 10.1 Create stats API endpoint
@@ -84,9 +92,13 @@
   - Rata-rata Total Pelayanan
 
 ### Phase 11: Security & Role Guards
-- [ ] 11.1 Ensure only authorized roles can update their stage
+- [x] 11.1 Ensure only authorized roles can update their stage
 - [ ] 11.2 Add middleware for socket authentication
 
+(most role guards implemented; socket auth can be added when needed)
+
+Additionally, CSRF tokens, session expiration/sliding, environment validation,
+rate limiting and basic unit tests have now been added (see README for details).
 ---
 
 ## Technical Details

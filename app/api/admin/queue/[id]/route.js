@@ -8,16 +8,20 @@ import { requireRole } from "@/lib/roleGuard";
 export const dynamic = "force-dynamic";
 
 async function verifyAuth(request) {
-  const { ok } = await requireRole(request, "UTAMA");
-  return ok;
+  // any authenticated staff may request queue updates; access control
+  // around which roles can perform which transitions lives in the
+  // workflow service and on the client side.
+  const { ok, staff, activeRole, response } = await requireRole(request, []);
+  return { ok, staff, activeRole, response };
 }
 
 export async function PUT(request, { params }) {
   try {
-    const isAdmin = await verifyAuth(request);
-    if (!isAdmin) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const auth = await verifyAuth(request);
+    if (!auth.ok) {
+      return auth.response || NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const { staff } = auth;
 
     const { id } = params;
     const body = await request.json();
@@ -51,7 +55,7 @@ export async function PUT(request, { params }) {
 
     let updatedQueue;
     try {
-      updatedQueue = await updateQueueStage(queueId, status, null, null);
+      updatedQueue = await updateQueueStage(queueId, status, staff?.id ?? null, null);
     } catch (error) {
       if (error.message === "QUEUE_NOT_FOUND") {
         return NextResponse.json({ error: "Queue not found" }, { status: 404 });

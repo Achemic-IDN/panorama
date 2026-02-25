@@ -4,8 +4,8 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 async function verifyAuth(request) {
-  const auth = request.cookies.get("auth");
-  return auth?.value === "admin";
+  const { ok } = await requireRole(request, []);
+  return ok;
 }
 
 function parseDate(value) {

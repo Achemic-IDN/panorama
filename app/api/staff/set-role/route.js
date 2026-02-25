@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyStaff } from "@/lib/staffAuth";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,20 @@ export async function POST(request) {
   const { role } = body || {};
   if (!role || !Array.isArray(staff.roles) || !staff.roles.includes(role)) {
     return NextResponse.json({ success: false, message: "Role tidak valid" }, { status: 400 });
+  }
+
+  // audit log for role selection (non-queue-specific)
+  try {
+    await prisma.queueAuditLog.create({
+      data: {
+        queueId: null,
+        staffId: staff.id,
+        action: "SWITCH_ROLE",
+        notes: `selected ${role}`,
+      },
+    });
+  } catch (e) {
+    console.error("Failed to audit role switch:", e);
   }
 
   const res = NextResponse.json({ success: true });

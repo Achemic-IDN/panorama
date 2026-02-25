@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { createCsrfToken } from "@/lib/csrf";
+import { createSession } from "@/lib/sessionService";
 import { logQueueCreated } from "@/lib/queueLogService";
 
 export const dynamic = 'force-dynamic';
@@ -26,19 +28,21 @@ export async function POST(request) {
           }
         }
 
+        const maxAge = parseInt(process.env.SESSION_MAX_AGE_SECONDS || "43200", 10);
         const res = NextResponse.json({ success: true, data: { roles: staff.roles } });
         res.cookies.set("auth", "admin", {
           httpOnly: true,
           secure: true,
           sameSite: 'lax',
           path: "/",
+          maxAge,
         });
         res.cookies.set("staff_id", String(staff.id), {
           httpOnly: true,
           secure: true,
           sameSite: 'lax',
           path: "/",
-          maxAge: 60 * 60 * 12,
+          maxAge,
         });
         if (Array.isArray(staff.roles) && staff.roles.length === 1) {
           res.cookies.set("staff_role", staff.roles[0], {
@@ -46,22 +50,53 @@ export async function POST(request) {
             secure: true,
             sameSite: 'lax',
             path: "/",
-            maxAge: 60 * 60 * 12,
+            maxAge,
           });
         }
+        res.cookies.set("session_birthdate", new Date().toISOString(), {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'lax',
+          path: "/",
+          maxAge,
+        });
+        // create DB session record
+        try {
+          const sess = await createSession(staff.id, maxAge);
+          res.cookies.set("session_id", sess.id, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'lax',
+            path: "/",
+            maxAge,
+          });
+        } catch (e) {
+          console.error("Failed to create session record:", e);
+        }
+        // csrf cookie
+        const csrfToken = createCsrfToken();
+        res.cookies.set("csrf_token", csrfToken, {
+          httpOnly: false,
+          secure: true,
+          sameSite: 'lax',
+          path: "/",
+          maxAge,
+        });
         return res;
       }
 
       // fallback for original hardcoded admin:admin/panorama
       if (username === "admin" && password === "panorama") {
+        const maxAge = parseInt(process.env.SESSION_MAX_AGE_SECONDS || "43200", 10);
         const res = NextResponse.json({ success: true, data: { roles: ["UTAMA"] } });
         res.cookies.set("auth", "admin", {
           httpOnly: true,
           secure: true,
           sameSite: 'lax',
           path: "/",
+          maxAge,
         });
-        // set staff_id to 1 if exists else skip
+        // set staff_id to 1 if exists else skip; also create session for that record
         try {
           const fallback = await prisma.staff.findFirst({ where: { username: "admin" } });
           if (fallback) {
@@ -70,17 +105,45 @@ export async function POST(request) {
               secure: true,
               sameSite: 'lax',
               path: "/",
-              maxAge: 60 * 60 * 12,
+              maxAge,
             });
             res.cookies.set("staff_role", "UTAMA", {
               httpOnly: true,
               secure: true,
               sameSite: 'lax',
               path: "/",
-              maxAge: 60 * 60 * 12,
+              maxAge,
             });
+            try {
+              const sess = await createSession(fallback.id, maxAge);
+              res.cookies.set("session_id", sess.id, {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'lax',
+                path: "/",
+                maxAge,
+              });
+            } catch (e) {
+              console.error("Failed to create fallback session:", e);
+            }
           }
         } catch {}
+        res.cookies.set("session_birthdate", new Date().toISOString(), {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'lax',
+          path: "/",
+          maxAge,
+        });
+        // csrf cookie
+        const csrfToken = createCsrfToken();
+        res.cookies.set("csrf_token", csrfToken, {
+          httpOnly: false,
+          secure: true,
+          sameSite: 'lax',
+          path: "/",
+          maxAge,
+        });
         return res;
       }
 

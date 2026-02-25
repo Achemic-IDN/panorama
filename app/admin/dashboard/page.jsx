@@ -7,6 +7,7 @@ import { getNextStage } from "@/lib/workflowConfig";
 import StatusBadge from "@/lib/components/StatusBadge";
 import ProgressTracker from "@/lib/components/ProgressTracker";
 import { getSocketClient } from "@/lib/socketClient";
+import { escapeHtml, csrfFetch } from "@/lib/utils";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -18,6 +19,13 @@ export default function AdminDashboard() {
   const [updatingQueueId, setUpdatingQueueId] = useState(null);
   const [updatingStatus, setUpdatingStatus] = useState(null);
   const [realtimeError, setRealtimeError] = useState(null);
+
+  // additional state for dashboard reports
+  const [statsData, setStatsData] = useState(null);
+  const [statsError, setStatsError] = useState(null);
+  const [dateFromFilter, setDateFromFilter] = useState("");
+  const [dateToFilter, setDateToFilter] = useState("");
+  const [notificationMessage, setNotificationMessage] = useState("");
 
   useEffect(() => {
     async function checkAuth() {
@@ -62,6 +70,9 @@ export default function AdminDashboard() {
         setQueues(queueData);
         setPatientLogins(patientLoginData);
         setLoading(false);
+
+        // load initial stats
+        fetchStats();
       } catch (err) {
         setError(err.message);
         setLoading(false);
@@ -107,7 +118,7 @@ export default function AdminDashboard() {
     };
   }, [loading]);
 
-  // Realtime update antrean via WebSocket (Socket.io) + polling fallback
+  // Realtime events via WebSocket including patient notifications
   useEffect(() => {
     if (loading) return;
 
@@ -151,6 +162,15 @@ export default function AdminDashboard() {
       upsertQueue(queue);
     });
 
+    // handle patient notifications (could also route to a toast component)
+    const offPatientNotif = client.on("patient:notification", (evt) => {
+      const data = evt?.data || evt;
+      if (data && data.message) {
+        setNotificationMessage(`Notifikasi pasien: ${escapeHtml(data.message)}`);
+        setTimeout(() => setNotificationMessage(""), 5000);
+      }
+    });
+
     // Polling fallback (every 10 seconds) if websocket is unavailable
     const offPolled = client.on("queue:polled", (payload) => {
       const polled = payload?.queues;
@@ -164,16 +184,19 @@ export default function AdminDashboard() {
       offUpdated();
       offMoved();
       offCompleted();
+      offPatientNotif();
       offPolled();
       // Do not disconnect the singleton socket client here to allow reuse.
     };
   }, [loading]);
 
+
+
   const updateQueueStatus = async (id, status) => {
     setUpdatingQueueId(id);
     setUpdatingStatus(status);
     try {
-      const res = await fetch(`/api/admin/queue/${id}`, {
+      const res = await csrfFetch(`/api/admin/queue/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
@@ -194,13 +217,44 @@ export default function AdminDashboard() {
     }
   };
 
+  // report helpers
+  async function fetchStats() {
+    try {
+      const params = new URLSearchParams();
+      if (dateFromFilter) params.set('dateFrom', dateFromFilter);
+      if (dateToFilter) params.set('dateTo', dateToFilter);
+      const res = await fetch(`/api/admin/queue-stats?${params.toString()}`, { cache: 'no-store' });
+      const statJson = await res.json();
+      if (!res.ok) {
+        throw new Error(statJson.error || 'Stats fetch failed');
+      }
+      setStatsData(statJson);
+      setStatsError(null);
+    } catch (e) {
+      setStatsError(e.message);
+    }
+  }
+
+  function exportQueues() {
+    try {
+      import('@/lib/exportUtils').then((m) => m.exportToCSV(queues, 'queues_export.csv'));
+    } catch {}
+  }
+
+  function exportStats() {
+    if (!statsData) return;
+    try {
+      import('@/lib/exportUtils').then((m) => m.exportToJSON(statsData, 'stats.json'));
+    } catch {}
+  }
+
   const [newQueue, setNewQueue] = useState("");
   const [newMrn, setNewMrn] = useState("");
   const [newPatientQueue, setNewPatientQueue] = useState("");
   const [newPatientMrn, setNewPatientMrn] = useState("");
 
-  // Calculate stats from queues (menggunakan enum baru)
-  const stats = {
+// Calculate stats from queues or use server‑side values if present
+  const stats = statsData || {
     total: queues.length,
     waiting: queues.filter(q => q.status === "WAITING").length,
     inProgress: queues.filter(q => isInProgressStatus(q.status)).length,
@@ -210,7 +264,7 @@ export default function AdminDashboard() {
   const createQueue = async () => {
     if (!newQueue || !newMrn) return;
     try {
-      const res = await fetch("/api/admin/queue", {
+      const res = await csrfFetch("/api/admin/queue", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ queue: newQueue, mrn: newMrn }),
@@ -234,7 +288,7 @@ export default function AdminDashboard() {
       return;
     }
     try {
-      const res = await fetch("/api/admin/patient-login", {
+      const res = await csrfFetch("/api/admin/patient-login", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ queue: newPatientQueue, mrn: newPatientMrn }),
@@ -253,7 +307,7 @@ export default function AdminDashboard() {
   const deleteAllPatientLogins = async () => {
     if (!confirm("Apakah Anda yakin ingin menghapus semua data login pasien?")) return;
     try {
-      const res = await fetch("/api/admin/patient-login", {
+      const res = await csrfFetch("/api/admin/patient-login", {
         method: 'DELETE',
       });
       if (res.ok) {
@@ -335,6 +389,36 @@ export default function AdminDashboard() {
             >
               Kelola Staff
             </button>
+            <button
+              type="button"
+              onClick={() => router.push("/admin/audit-logs")}
+              style={{
+                padding: "8px 14px",
+                background: "linear-gradient(135deg, #ffc107 0%, #fd7e14 100%)",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "14px"
+              }}
+            >
+              Audit Logs
+            </button>
+            <button
+              type="button"
+              onClick={exportQueues}
+              style={{
+                padding: "8px 14px",
+                background: "linear-gradient(135deg, #17a2b8 0%, #117a8b 100%)",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "14px"
+              }}
+            >
+              Export Queues
+            </button>
           </div>
         </div>
 
@@ -343,8 +427,47 @@ export default function AdminDashboard() {
             {realtimeError}
           </div>
         )}
+        {notificationMessage && (
+          <div style={{ marginBottom: "10px", background: "#d1ecf1", color: "#0c5460", padding: "8px 10px", borderRadius: "6px" }}>
+            {notificationMessage}
+          </div>
+        )}
 
         {/* Statistik */}
+        <div style={{ display: "flex", gap: "10px", marginBottom: "10px", flexWrap: "wrap", alignItems: "center" }}>
+          <label style={{ fontSize: "14px" }}>
+            Dari:
+            <input
+              type="date"
+              value={dateFromFilter}
+              onChange={(e) => setDateFromFilter(e.target.value)}
+              style={{ marginLeft: "4px" }}
+            />
+          </label>
+          <label style={{ fontSize: "14px" }}>
+            Sampai:
+            <input
+              type="date"
+              value={dateToFilter}
+              onChange={(e) => setDateToFilter(e.target.value)}
+              style={{ marginLeft: "4px" }}
+            />
+          </label>
+          <button
+            type="button"
+            onClick={fetchStats}
+            style={{ padding: "6px 12px" }}
+          >
+            Tampilkan
+          </button>
+          <button
+            type="button"
+            onClick={exportStats}
+            style={{ padding: "6px 12px" }}
+          >
+            Export Stats
+          </button>
+        </div>
         <div style={{ display: "flex", gap: "20px", marginBottom: "30px", flexWrap: "wrap" }}>
           <div style={{ background: "#f8f9fa", padding: "20px", borderRadius: "8px", flex: 1, minWidth: "150px", textAlign: "center" }}>
             <h3>Total Antrean</h3>
@@ -421,11 +544,11 @@ export default function AdminDashboard() {
               <tr key={q.id} style={{ background: i % 2 === 0 ? "#fff" : "#f8f9fa" }}>
                 <td style={{ padding: "12px", border: "1px solid #ddd" }}>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ fontSize: 20, fontWeight: 800, color: '#1e3a8a' }}>{q.queue}</div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: '#1e3a8a' }}>{escapeHtml(q.queue)}</div>
                     <div style={{ marginTop: 6 }}><StatusBadge status={q.status} /></div>
                   </div>
                 </td>
-                <td style={{ padding: "12px", border: "1px solid #ddd" }}>{q.mrn}</td>
+                <td style={{ padding: "12px", border: "1px solid #ddd" }}>{escapeHtml(q.mrn)}</td>
                 <td style={{ padding: "12px", border: "1px solid #ddd" }}>
                   <div style={{ marginBottom: "6px", fontSize: "13px" }}>
                     Tahap saat ini: <strong>{getStatusLabel(q.status)}</strong>

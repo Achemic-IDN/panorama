@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 export async function POST(request) {
+  const isProd = process.env.NODE_ENV === "production";
   // this endpoint logs the current user out from all devices (staff only)
   const staffId = request.cookies.get("staff_id")?.value;
   if (!staffId) {
@@ -21,10 +22,10 @@ export async function POST(request) {
   }
 
   const res = NextResponse.json({ success: true, message: "Logged out from all sessions" });
-  res.cookies.set("staff_id", "", { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 0 });
-  res.cookies.set("staff_role", "", { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 0 });
-  res.cookies.set("session_birthdate", "", { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 0 });
-  res.cookies.set("auth", "", { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 0 });
-  res.cookies.set("csrf_token", "", { httpOnly: false, secure: true, sameSite: "lax", path: "/", maxAge: 0 });
+  res.cookies.set("staff_id", "", { httpOnly: true, secure: isProd, sameSite: "lax", path: "/", maxAge: 0 });
+  res.cookies.set("staff_role", "", { httpOnly: true, secure: isProd, sameSite: "lax", path: "/", maxAge: 0 });
+  res.cookies.set("session_birthdate", "", { httpOnly: true, secure: isProd, sameSite: "lax", path: "/", maxAge: 0 });
+  res.cookies.set("auth", "", { httpOnly: true, secure: isProd, sameSite: "lax", path: "/", maxAge: 0 });
+  res.cookies.set("csrf_token", "", { httpOnly: false, secure: isProd, sameSite: "lax", path: "/", maxAge: 0 });
   return res;
 }

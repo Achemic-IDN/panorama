@@ -4,6 +4,7 @@ import { revokeSession } from "@/lib/sessionService";
 export const dynamic = "force-dynamic";
 
 export async function POST(request) {
+  const isProd = process.env.NODE_ENV === "production";
   const sessionId = request.cookies.get("session_id")?.value;
   if (sessionId) {
     try {
@@ -21,7 +22,7 @@ export async function POST(request) {
 
   res.cookies.set("staff_id", "", {
     httpOnly: true,
-    secure: true,
+    secure: isProd,
     sameSite: "lax",
     path: "/",
     maxAge: 0,
@@ -29,7 +30,7 @@ export async function POST(request) {
 
   res.cookies.set("staff_role", "", {
     httpOnly: true,
-    secure: true,
+    secure: isProd,
     sameSite: "lax",
     path: "/",
     maxAge: 0,
@@ -37,14 +38,14 @@ export async function POST(request) {
 
   res.cookies.set("session_id", "", {
     httpOnly: true,
-    secure: true,
+    secure: isProd,
     sameSite: "lax",
     path: "/",
     maxAge: 0,
   });
   res.cookies.set("csrf_token", "", {
     httpOnly: false,
-    secure: true,
+    secure: isProd,
     sameSite: "lax",
     path: "/",
     maxAge: 0,

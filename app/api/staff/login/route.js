@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request) {
   try {
+    const isProd = process.env.NODE_ENV === "production";
     const body = await request.json();
     const username = (body?.username || "").trim();
     const password = body?.password || "";
@@ -45,7 +46,7 @@ export async function POST(request) {
     const maxAge = parseInt(process.env.SESSION_MAX_AGE_SECONDS || "43200", 10); // default 12h
     res.cookies.set("staff_id", String(staff.id), {
       httpOnly: true,
-      secure: true,
+      secure: isProd,
       sameSite: "lax",
       path: "/",
       maxAge,
@@ -55,7 +56,7 @@ export async function POST(request) {
     if (Array.isArray(staff.roles) && staff.roles.length === 1) {
       res.cookies.set("staff_role", staff.roles[0], {
         httpOnly: true,
-        secure: true,
+        secure: isProd,
         sameSite: "lax",
         path: "/",
         maxAge,
@@ -65,7 +66,7 @@ export async function POST(request) {
     // set birthdate for sliding expiration
     res.cookies.set("session_birthdate", new Date().toISOString(), {
       httpOnly: true,
-      secure: true,
+      secure: isProd,
       sameSite: "lax",
       path: "/",
       maxAge,
@@ -76,7 +77,7 @@ export async function POST(request) {
       const sess = await createSession(staff.id, maxAge);
       res.cookies.set("session_id", sess.id, {
         httpOnly: true,
-        secure: true,
+        secure: isProd,
         sameSite: "lax",
         path: "/",
         maxAge,
@@ -89,7 +90,7 @@ export async function POST(request) {
     const csrfToken = createCsrfToken();
     res.cookies.set("csrf_token", csrfToken, {
       httpOnly: false,
-      secure: true,
+      secure: isProd,
       sameSite: "lax",
       path: "/",
       maxAge,

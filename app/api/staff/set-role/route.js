@@ -6,6 +6,7 @@ export const dynamic = "force-dynamic";
 
 // simple endpoint to set active role cookie after selection
 export async function POST(request) {
+  const isProd = process.env.NODE_ENV === "production";
   const { authenticated, staff } = await verifyStaff(request);
   if (!authenticated) {
     return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
@@ -34,7 +35,7 @@ export async function POST(request) {
   const res = NextResponse.json({ success: true });
   res.cookies.set("staff_role", String(role), {
     httpOnly: true,
-    secure: true,
+    secure: isProd,
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 60 * 12,

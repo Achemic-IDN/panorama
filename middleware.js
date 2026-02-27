@@ -27,6 +27,7 @@ function checkRate(ip) {
 }
 
 export function middleware(req) {
+  const isProd = process.env.NODE_ENV === "production";
   const auth = req.cookies.get("auth")?.value;
   const staffId = req.cookies.get("staff_id")?.value;
   const birthdate = req.cookies.get("session_birthdate")?.value;
@@ -47,7 +48,7 @@ export function middleware(req) {
     const res = NextResponse.next();
     res.cookies.set("session_birthdate", new Date().toISOString(), {
       httpOnly: true,
-      secure: true,
+      secure: isProd,
       sameSite: "lax",
       path: "/",
       maxAge: parseInt(env.SESSION_MAX_AGE_SECONDS, 10) || 3600,

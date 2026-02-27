@@ -10,10 +10,10 @@ export async function POST(request) {
   const body = await request.json();
   const { username, password, role, queue, mrn } = body;
 
+  const isProd = process.env.NODE_ENV === "production";
+
   // Admin login (now dynamic using staff table)
   if (role === "admin") {
-    const isProd = process.env.NODE_ENV === "production";
-
     if (!username || !password) {
       return NextResponse.json({ success: false, message: "Username dan password wajib diisi" }, { status: 400 });
     }
@@ -296,7 +296,7 @@ export async function POST(request) {
 
       res.cookies.set("auth", "patient", {
         httpOnly: true,
-        secure: true,
+        secure: isProd,
         sameSite: "lax",
         path: "/",
       });
@@ -304,7 +304,7 @@ export async function POST(request) {
       // Store patient data in cookie for dashboard display
       res.cookies.set("patientData", JSON.stringify(newPatient), {
         httpOnly: false, // Allow client-side access
-        secure: true,
+        secure: isProd,
         sameSite: "lax",
         path: "/",
         maxAge: 60 * 60 * 24, // 24 hours

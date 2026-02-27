@@ -7,36 +7,46 @@ export default function LoginAdmin() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function handleLogin() {
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        role: "admin",
-        username,
-        password,
-      }),
-    });
+    setError("");
+    try {
+      setLoading(true);
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          role: "admin",
+          username,
+          password,
+        }),
+      });
 
-    const json = await res.json().catch(() => null);
-    if (!res.ok || !json?.success) {
-      setError("Login admin gagal");
-      return;
-    }
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.success) {
+        setError(json?.message || "Login admin gagal");
+        return;
+      }
 
-    // if our admin account happened to have exactly one station role
-    // (ENTRY, TRANSPORT, PACKAGING, PENYERAHAN) and no UTAMA, there is
-    // no need to force them through the selector – just take them
-    // straight to the staff dashboard. otherwise fall back to the
-    // normal behaviour of showing the selector.
-    const roles = Array.isArray(json.data?.roles) ? json.data.roles : [];
-    if (roles.length === 1 && roles[0] !== "UTAMA") {
-      // server already set staff_role cookie when there was only one
-      // role, so we can just navigate
-      router.push("/staff/dashboard");
-    } else {
-      router.push("/admin/select-role");
+      // if our admin account happened to have exactly one station role
+      // (ENTRY, TRANSPORT, PACKAGING, PENYERAHAN) and no UTAMA, there is
+      // no need to force them through the selector – just take them
+      // straight to the staff dashboard. otherwise fall back to the
+      // normal behaviour of showing the selector.
+      const roles = Array.isArray(json.data?.roles) ? json.data.roles : [];
+      if (roles.length === 1 && roles[0] !== "UTAMA") {
+        // server already set staff_role cookie when there was only one
+        // role, so we can just navigate
+        router.push("/staff/dashboard");
+      } else {
+        router.push("/admin/select-role");
+      }
+    } catch (e) {
+      console.error("Admin login request failed:", e);
+      setError("Tidak dapat terhubung ke server. Coba lagi beberapa saat.");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -95,6 +105,7 @@ export default function LoginAdmin() {
 
         <button
           onClick={handleLogin}
+          disabled={loading}
           style={{
             width: "100%",
             padding: "12px",
@@ -109,7 +120,7 @@ export default function LoginAdmin() {
           onMouseOver={(e) => e.target.style.transform = "scale(1.05)"}
           onMouseOut={(e) => e.target.style.transform = "scale(1)"}
         >
-          Login Admin
+          {loading ? "Memproses..." : "Login Admin"}
         </button>
       </div>
     </div>

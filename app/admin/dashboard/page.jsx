@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getStatusLabel, isInProgressStatus } from "@/lib/status";
 import { getNextStage } from "@/lib/workflowConfig";
 import StatusBadge from "@/lib/components/StatusBadge";
@@ -26,6 +26,7 @@ export default function AdminDashboard() {
   const [dateFromFilter, setDateFromFilter] = useState("");
   const [dateToFilter, setDateToFilter] = useState("");
   const [notificationMessage, setNotificationMessage] = useState("");
+  const [togglingPriorityId, setTogglingPriorityId] = useState(null);
 
   useEffect(() => {
     async function checkAuth() {
@@ -192,6 +193,18 @@ export default function AdminDashboard() {
 
 
 
+  const sortedQueues = useMemo(() => {
+    const list = Array.isArray(queues) ? [...queues] : [];
+    return list.sort((a, b) => {
+      const ap = a?.priority ? 1 : 0;
+      const bp = b?.priority ? 1 : 0;
+      if (bp !== ap) return bp - ap; // priority first
+      const at = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bt = b?.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bt - at; // newest first
+    });
+  }, [queues]);
+
   const updateQueueStatus = async (id, status) => {
     setUpdatingQueueId(id);
     setUpdatingStatus(status);
@@ -214,6 +227,28 @@ export default function AdminDashboard() {
     } finally {
       setUpdatingQueueId(null);
       setUpdatingStatus(null);
+    }
+  };
+
+  const togglePriority = async (queueId, nextPriority) => {
+    setTogglingPriorityId(queueId);
+    try {
+      const res = await csrfFetch(`/api/admin/queue/${queueId}/priority`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ priority: nextPriority }),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.success) {
+        console.error("Failed to toggle priority:", json?.message || json);
+        return;
+      }
+      const updatedQueue = json.data;
+      setQueues((prev) => prev.map((q) => (q.id === updatedQueue.id ? updatedQueue : q)));
+    } catch (e) {
+      console.error("Error toggling priority:", e);
+    } finally {
+      setTogglingPriorityId(null);
     }
   };
 
@@ -540,11 +575,26 @@ export default function AdminDashboard() {
             </tr>
           </thead>
           <tbody>
-            {queues.map((q, i) => (
+            {sortedQueues.map((q, i) => (
               <tr key={q.id} style={{ background: i % 2 === 0 ? "#fff" : "#f8f9fa" }}>
                 <td style={{ padding: "12px", border: "1px solid #ddd" }}>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ fontSize: 20, fontWeight: 800, color: '#1e3a8a' }}>{escapeHtml(q.queue)}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{ fontSize: 20, fontWeight: 800, color: '#1e3a8a' }}>{escapeHtml(q.queue)}</div>
+                      {q.priority && (
+                        <span style={{
+                          fontSize: 11,
+                          fontWeight: 800,
+                          padding: "3px 8px",
+                          borderRadius: 999,
+                          background: "#fff3cd",
+                          border: "1px solid #ffe69c",
+                          color: "#856404",
+                        }}>
+                          PRIORITAS
+                        </span>
+                      )}
+                    </div>
                     <div style={{ marginTop: 6 }}><StatusBadge status={q.status} /></div>
                   </div>
                 </td>
@@ -557,6 +607,37 @@ export default function AdminDashboard() {
                     <ProgressTracker status={q.status} />
                   </div>
                   <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center", marginBottom: "6px" }}>
+                    {/* Tombol prioritas */}
+                    <button
+                      type="button"
+                      onClick={() => togglePriority(q.id, !q.priority)}
+                      disabled={
+                        togglingPriorityId === q.id ||
+                        q.status === "SELESAI" ||
+                        q.status === "CANCELLED"
+                      }
+                      style={{
+                        padding: "4px 10px",
+                        borderRadius: "4px",
+                        border: q.priority ? "1px solid #ff9800" : "1px solid #ced4da",
+                        background: q.priority ? "#fff3cd" : "#f1f3f5",
+                        color: q.priority ? "#856404" : "#343a40",
+                        cursor:
+                          togglingPriorityId === q.id ||
+                          q.status === "SELESAI" ||
+                          q.status === "CANCELLED"
+                            ? "not-allowed"
+                            : "pointer",
+                        fontSize: "11px",
+                        minWidth: "110px",
+                      }}
+                    >
+                      {togglingPriorityId === q.id
+                        ? "Mengubah..."
+                        : q.priority
+                          ? "Hapus Prioritas"
+                          : "Prioritas"}
+                    </button>
                     {(() => {
                       const nextStage = getNextStage(q.status);
                       const isTerminal = q.status === "SELESAI" || q.status === "CANCELLED";

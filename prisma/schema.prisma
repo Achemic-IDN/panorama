@@ -50,6 +50,7 @@ model Queue {
   queue  String      @unique
   mrn    String
   status QueueStatus @default(MENUNGGU)
+  priority Boolean   @default(false)
 
   // Stage timestamps - when queue enters each stage
   entryAt     DateTime?

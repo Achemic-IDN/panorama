@@ -22,7 +22,7 @@ export async function GET(request) {
     }
 
     const queues = await prisma.queue.findMany({
-      orderBy: { createdAt: 'desc' },
+      orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
     });
     return NextResponse.json(queues);
   } catch (error) {

@@ -36,7 +36,7 @@ export async function GET(request) {
 
     const queues = await prisma.queue.findMany({
       where: visibleStatuses ? { status: { in: visibleStatuses } } : undefined,
-      orderBy: { updatedAt: "asc" },
+      orderBy: [{ priority: "desc" }, { updatedAt: "asc" }],
     });
 
     return ApiResponse.success({

@@ -29,6 +29,18 @@ export default function StaffDashboardPage() {
     return `Dashboard Staff - ${getRoleLabel(activeRole)}`;
   }, [activeRole]);
 
+  const sortedQueues = useMemo(() => {
+    const list = Array.isArray(queues) ? [...queues] : [];
+    return list.sort((a, b) => {
+      const ap = a?.priority ? 1 : 0;
+      const bp = b?.priority ? 1 : 0;
+      if (bp !== ap) return bp - ap; // priority first
+      const at = a?.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+      const bt = b?.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+      return at - bt; // oldest first
+    });
+  }, [queues]);
+
   async function loadQueues() {
     setLoading(true);
     setError("");
@@ -469,7 +481,7 @@ export default function StaffDashboardPage() {
               <div style={{ color: "#666" }}>Tidak ada antrean pada stage ini.</div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 12 }}>
-                {queues.map((q) => (
+                {sortedQueues.map((q) => (
                   <div key={q.id} style={{
                     padding: 16,
                     borderRadius: 10,
@@ -479,7 +491,23 @@ export default function StaffDashboardPage() {
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
                       <div>
-                        <div style={{ fontSize: 40, fontWeight: 800, color: '#1e3a8a' }}>{escapeHtml(q.queue)}</div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <div style={{ fontSize: 40, fontWeight: 800, color: '#1e3a8a' }}>{escapeHtml(q.queue)}</div>
+                          {q.priority && (
+                            <span style={{
+                              fontSize: 11,
+                              fontWeight: 800,
+                              padding: "3px 8px",
+                              borderRadius: 999,
+                              background: "#fff3cd",
+                              border: "1px solid #ffe69c",
+                              color: "#856404",
+                              height: "fit-content",
+                            }}>
+                              PRIORITAS
+                            </span>
+                          )}
+                        </div>
                         <div style={{ color: '#666', marginTop: 6 }}>MRN: <strong>{escapeHtml(q.mrn)}</strong></div>
                       </div>
                       <div style={{ textAlign: 'right' }}>

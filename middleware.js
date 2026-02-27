@@ -77,6 +77,13 @@ export function middleware(req) {
     }
   }
 
+  // MONITORING screen (read-only) - any logged-in staff/admin can view
+  if (path.startsWith("/monitor")) {
+    if (!staffId && auth !== "admin") {
+      return NextResponse.redirect(new URL("/staff/login", req.url));
+    }
+  }
+
   // ADMIN APIs - require admin auth cookie
   if (path.startsWith("/api/admin")) {
     if (auth !== "admin") {
@@ -137,6 +144,7 @@ export const config = {
     "/dashboard",
     "/admin/dashboard",
     "/staff/:path*",
+    "/monitor",
     "/api/:path*", // apply auth/CSRF/rate-limit on all API endpoints
   ],
 };

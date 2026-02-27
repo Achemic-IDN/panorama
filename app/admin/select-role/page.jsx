@@ -10,6 +10,7 @@ export default function AdminSelectRolePage() {
   const [roles, setRoles] = useState([]);
   const [error, setError] = useState("");
   const ALL_ROLES = ["UTAMA", "ENTRY", "TRANSPORT", "PACKAGING", "PENYERAHAN"];
+  const MONITORING_ROLE = "MONITORING";
 
   useEffect(() => {
     async function fetchRoles() {
@@ -44,6 +45,10 @@ export default function AdminSelectRolePage() {
     } catch (e) {
       setError("Gagal memilih role");
     }
+  }
+
+  function goMonitoring() {
+    router.push("/monitor");
   }
 
   return (
@@ -96,6 +101,41 @@ export default function AdminSelectRolePage() {
             </button>
           );
         })}
+
+        {/* Monitoring (read-only) */}
+        <div style={{ marginTop: 8 }}>
+          <button
+            onClick={goMonitoring}
+            style={{
+              width: "100%",
+              padding: "12px",
+              marginBottom: "0px",
+              border: "1px solid #ddd",
+              borderRadius: "10px",
+              fontSize: "16px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 10,
+              background: "linear-gradient(135deg, rgba(30,58,138,0.08) 0%, rgba(54,133,252,0.08) 100%)",
+            }}
+            title="Layar monitoring (read-only)"
+          >
+            <span aria-hidden="true" style={{ display: "inline-flex" }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M4 5.5C4 4.67 4.67 4 5.5 4h13C19.33 4 20 4.67 20 5.5v8.5c0 .83-.67 1.5-1.5 1.5h-13C4.67 16 4 15.33 4 14.5V5.5Z"
+                  stroke="#1e3a8a"
+                  strokeWidth="2"
+                />
+                <path d="M8 20h8" stroke="#1e3a8a" strokeWidth="2" strokeLinecap="round" />
+                <path d="M12 16v4" stroke="#1e3a8a" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </span>
+            {getRoleLabel(MONITORING_ROLE)}
+          </button>
+        </div>
       </div>
     </div>
   );

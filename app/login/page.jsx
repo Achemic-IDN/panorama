@@ -7,6 +7,7 @@ export default function LoginPasien() {
   const [queue, setQueue] = useState("");
   const [mrn, setMrn] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // Handle MRN input with number-only validation and auto-capitalization
   const handleMrnChange = (e) => {
@@ -17,6 +18,8 @@ export default function LoginPasien() {
   };
 
   async function handleLogin() {
+    setError("");
+
     // Client-side validation
     if (!mrn) {
       setError("Nomor Rekam Medis wajib diisi");
@@ -37,22 +40,29 @@ export default function LoginPasien() {
       setError("Nomor antrean wajib diisi");
       return;
     }
+    try {
+      setLoading(true);
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          role: "patient",
+          queue,
+          mrn,
+        }),
+      });
 
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        role: "patient",
-        queue,
-        mrn,
-      }),
-    });
-
-    if (res.ok) {
-      router.push("/dashboard");
-    } else {
-      const data = await res.json();
-      setError(data.message || "Login gagal. Periksa nomor antrean & MRN.");
+      if (res.ok) {
+        router.push("/dashboard");
+      } else {
+        const data = await res.json().catch(() => null);
+        setError(data?.message || "Login gagal. Periksa nomor antrean & MRN.");
+      }
+    } catch (e) {
+      console.error("Patient login request failed:", e);
+      setError("Tidak dapat terhubung ke server. Coba lagi beberapa saat.");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -110,6 +120,7 @@ export default function LoginPasien() {
 
         <button
           onClick={handleLogin}
+          disabled={loading}
           style={{
             width: "100%",
             padding: "12px",
@@ -124,7 +135,7 @@ export default function LoginPasien() {
           onMouseOver={(e) => e.target.style.transform = "scale(1.05)"}
           onMouseOut={(e) => e.target.style.transform = "scale(1)"}
         >
-          Masuk Dashboard
+          {loading ? "Memproses..." : "Masuk Dashboard"}
         </button>
       </div>
     </div>
